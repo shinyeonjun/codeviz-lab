@@ -16,7 +16,7 @@ class SqlAlchemyExecutionRepository:
     def save_execution(
         self,
         *,
-        workspace_id: str | None,
+        user_id: str,
         language: str,
         visualization_mode: str,
         source_code: str,
@@ -25,7 +25,7 @@ class SqlAlchemyExecutionRepository:
     ) -> ExecutionRead:
         run = ExecutionRun(
             id=str(uuid4()),
-            workspace_id=workspace_id,
+            user_id=user_id,
             language=language,
             visualization_mode=visualization_mode,
             status=result.status,
@@ -57,21 +57,23 @@ class SqlAlchemyExecutionRepository:
         self._session.commit()
         return self.get_execution(run.id)  # type: ignore[return-value]
 
-    def get_execution(self, run_id: str) -> ExecutionRead | None:
+    def get_execution(self, run_id: str, *, user_id: str | None = None) -> ExecutionRead | None:
         statement = (
             select(ExecutionRun)
             .options(selectinload(ExecutionRun.steps))
             .where(ExecutionRun.id == run_id)
         )
+        if user_id is not None:
+            statement = statement.where(ExecutionRun.user_id == user_id)
         run = self._session.execute(statement).scalar_one_or_none()
         if run is None:
             return None
         return self._to_schema(run)
 
-    def list_recent_executions(self, *, workspace_id: str, limit: int = 5) -> list[ExecutionRun]:
+    def list_recent_executions(self, *, user_id: str, limit: int = 5) -> list[ExecutionRun]:
         statement = (
             select(ExecutionRun)
-            .where(ExecutionRun.workspace_id == workspace_id)
+            .where(ExecutionRun.user_id == user_id)
             .order_by(ExecutionRun.created_at.desc())
             .limit(limit)
         )

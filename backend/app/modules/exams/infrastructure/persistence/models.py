@@ -10,9 +10,9 @@ class ExamAttempt(Base):
     __tablename__ = "exam_attempts"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    workspace_id: Mapped[str] = mapped_column(
-        ForeignKey("workspaces.id", ondelete="CASCADE"),
-        nullable=False,
+    user_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
     lesson_id: Mapped[str] = mapped_column(String(100), nullable=False)
     question_id: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -28,4 +28,4 @@ class ExamAttempt(Base):
         default=lambda: datetime.now(UTC),
     )
 
-    workspace = relationship("Workspace", back_populates="exam_attempts")
+    user = relationship("User", back_populates="exam_attempts")

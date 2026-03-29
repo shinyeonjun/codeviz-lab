@@ -24,7 +24,7 @@ async def create_execution(
     try:
         execution = service.create_execution(
             payload,
-            workspace_id=auth_context.workspace.id,
+            user_id=auth_context.user.id,
         )
     except ExecutionInputLimitError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
@@ -38,11 +38,11 @@ async def create_execution(
 @router.get("/{run_id}")
 def read_execution(
     run_id: str,
-    _: AuthContext = Depends(get_required_auth_context),
+    auth_context: AuthContext = Depends(get_required_auth_context),
     service: ExecutionService = Depends(get_execution_service),
 ) -> dict[str, object]:
     try:
-        execution = service.get_execution(run_id)
+        execution = service.get_execution(run_id, user_id=auth_context.user.id)
     except ExecutionNotFoundError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     return success_response(execution.model_dump(mode="json", by_alias=True))
@@ -64,7 +64,7 @@ async def stream_execution(
     await execution_stream_manager.connect(run_id, websocket)
     try:
         try:
-            execution = service.get_execution(run_id)
+            execution = service.get_execution(run_id, user_id=auth_context.user.id)
             await websocket.send_json(
                 {"type": "execution.snapshot", "data": execution.model_dump(mode="json", by_alias=True)}
             )

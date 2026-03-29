@@ -18,8 +18,9 @@ class User(Base):
         default=lambda: datetime.now(UTC),
     )
 
-    workspaces = relationship("Workspace", back_populates="owner")
     sessions = relationship("AuthSession", back_populates="user")
+    executions = relationship("ExecutionRun", back_populates="user")
+    exam_attempts = relationship("ExamAttempt", back_populates="user")
 
 
 class AuthSession(Base):
@@ -27,12 +28,8 @@ class AuthSession(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
-    user_id: Mapped[str | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    workspace_id: Mapped[str] = mapped_column(
-        ForeignKey("workspaces.id", ondelete="CASCADE"),
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -42,4 +39,3 @@ class AuthSession(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     user = relationship("User", back_populates="sessions")
-    workspace = relationship("Workspace", back_populates="sessions")

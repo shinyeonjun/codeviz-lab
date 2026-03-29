@@ -14,13 +14,13 @@ class ExamAttemptRepository:
     def save_attempt(
         self,
         *,
-        workspace_id: str,
+        user_id: str,
         source_code: str,
         submission: ExamSubmissionRead,
     ) -> None:
         attempt = ExamAttempt(
             id=str(uuid4()),
-            workspace_id=workspace_id,
+            user_id=user_id,
             lesson_id=submission.lesson_id,
             question_id=submission.question_id,
             source_code=source_code,
@@ -34,10 +34,10 @@ class ExamAttemptRepository:
         self._session.add(attempt)
         self._session.commit()
 
-    def list_recent_attempts(self, *, workspace_id: str, limit: int = 5) -> list[ExamAttempt]:
+    def list_recent_attempts(self, *, user_id: str, limit: int = 5) -> list[ExamAttempt]:
         statement = (
             select(ExamAttempt)
-            .where(ExamAttempt.workspace_id == workspace_id)
+            .where(ExamAttempt.user_id == user_id)
             .order_by(ExamAttempt.created_at.desc())
             .limit(limit)
         )

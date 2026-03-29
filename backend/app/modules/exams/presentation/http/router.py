@@ -90,7 +90,7 @@ def submit_exam_answer(
         raise HTTPException(status_code=404, detail=str(error)) from error
 
     attempt_repository.save_attempt(
-        workspace_id=auth_context.workspace.id,
+        user_id=auth_context.user.id,
         source_code=payload.source_code,
         submission=submission,
     )

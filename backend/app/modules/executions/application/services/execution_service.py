@@ -27,7 +27,7 @@ class ExecutionService:
         self._visualizer = visualizer
         self._selection_service = selection_service
 
-    def create_execution(self, payload: ExecutionCreate, *, workspace_id: str | None = None) -> ExecutionRead:
+    def create_execution(self, payload: ExecutionCreate, *, user_id: str) -> ExecutionRead:
         self._validate_input_limits(payload)
         selection = self._selection_service.select(
             VisualizationSelectionContext(
@@ -43,7 +43,7 @@ class ExecutionService:
         )
         result = self._runner.run(command)
         execution = self._repository.save_execution(
-            workspace_id=workspace_id,
+            user_id=user_id,
             language=payload.language,
             visualization_mode=selection.selected_mode,
             source_code=payload.source_code,
@@ -52,8 +52,8 @@ class ExecutionService:
         )
         return self._enrich_execution(execution)
 
-    def get_execution(self, run_id: str) -> ExecutionRead:
-        execution = self._repository.get_execution(run_id)
+    def get_execution(self, run_id: str, *, user_id: str | None = None) -> ExecutionRead:
+        execution = self._repository.get_execution(run_id, user_id=user_id)
         if execution is None:
             raise ExecutionNotFoundError(run_id)
         return self._enrich_execution(execution)

@@ -17,7 +17,6 @@ from app.modules.auth.presentation.http.schemas import (
     LoginCreate,
     RegisterCreate,
 )
-from app.modules.workspaces.infrastructure.persistence.models import Workspace
 
 
 class AuthService:
@@ -38,9 +37,8 @@ class AuthService:
             password_hash=hash_password(payload.password),
             name=payload.name,
         )
-        workspace = self._get_or_create_primary_workspace(user=user)
         self._delete_existing_session(session_token)
-        return self._issue_session_for_user(user=user, workspace=workspace)
+        return self._issue_session_for_user(user=user)
 
     def login(
         self,
@@ -52,9 +50,8 @@ class AuthService:
         if user is None or not verify_password(payload.password, user.password_hash):
             raise InvalidCredentialsError()
 
-        workspace = self._get_or_create_primary_workspace(user=user)
         self._delete_existing_session(session_token)
-        return self._issue_session_for_user(user=user, workspace=workspace)
+        return self._issue_session_for_user(user=user)
 
     def logout(self, session_token: str | None) -> None:
         self._delete_existing_session(session_token)
@@ -73,22 +70,11 @@ class AuthService:
             return None
         return self._build_state(context)
 
-    def _get_or_create_primary_workspace(self, *, user: User) -> Workspace:
-        workspaces = self._repository.get_user_workspaces(user.id)
-        if workspaces:
-            return workspaces[0]
-        return self._repository.create_workspace(
-            owner_user_id=user.id,
-            title=f"{user.name}의 기본 공간",
-            is_guest=False,
-        )
-
-    def _issue_session_for_user(self, *, user: User, workspace: Workspace) -> tuple[AuthSessionRead, str]:
+    def _issue_session_for_user(self, *, user: User) -> tuple[AuthSessionRead, str]:
         raw_token = generate_session_token()
         auth_session = self._repository.create_session(
             token_hash=hash_session_token(raw_token),
             user_id=user.id,
-            workspace_id=workspace.id,
             ttl_days=settings.auth_session_ttl_days,
         )
         return self._build_state(self._build_context_from_session(auth_session)), raw_token
@@ -102,7 +88,6 @@ class AuthService:
     def _build_context_from_session(self, auth_session: AuthSession) -> AuthContext:
         return AuthContext(
             session=auth_session,
-            workspace=auth_session.workspace,
             user=auth_session.user,
         )
 

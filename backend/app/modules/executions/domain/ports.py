@@ -13,7 +13,7 @@ class ExecutionRepositoryProtocol(Protocol):
     def save_execution(
         self,
         *,
-        workspace_id: str | None,
+        user_id: str,
         language: str,
         visualization_mode: str,
         source_code: str,
@@ -22,7 +22,7 @@ class ExecutionRepositoryProtocol(Protocol):
     ) -> ExecutionRead:
         ...
 
-    def get_execution(self, run_id: str) -> ExecutionRead | None:
+    def get_execution(self, run_id: str, *, user_id: str | None = None) -> ExecutionRead | None:
         ...
 
 

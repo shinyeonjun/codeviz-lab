@@ -11,8 +11,8 @@ class ExecutionRun(Base):
     __tablename__ = "execution_runs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    workspace_id: Mapped[str | None] = mapped_column(
-        ForeignKey("workspaces.id", ondelete="SET NULL"),
+    user_id: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     language: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -35,7 +35,7 @@ class ExecutionRun(Base):
         cascade="all, delete-orphan",
         order_by="ExecutionStep.step_index",
     )
-    workspace = relationship("Workspace", back_populates="executions")
+    user = relationship("User", back_populates="executions")
 
 
 class ExecutionStep(Base):
