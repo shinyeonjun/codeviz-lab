@@ -148,7 +148,7 @@ def get_trace_runner() -> TraceRunnerProtocol:
                     max_stdout_chars=settings.runner_max_stdout_chars,
                 ),
                 "c": LocalCExecutionRunner(
-                    timeout_seconds=settings.runner_timeout_seconds,
+                    timeout_seconds=settings.runner_c_timeout_seconds,
                     max_trace_steps=settings.runner_max_trace_steps,
                     max_stdout_chars=settings.runner_max_stdout_chars,
                 ),
@@ -169,7 +169,7 @@ def get_trace_runner() -> TraceRunnerProtocol:
                     max_stdout_chars=settings.runner_max_stdout_chars,
                 ),
                 "c": DockerCExecutionRunner(
-                    timeout_seconds=settings.runner_timeout_seconds,
+                    timeout_seconds=settings.runner_c_timeout_seconds,
                     image=settings.runner_docker_c_image,
                     memory_limit=settings.runner_docker_memory_limit,
                     cpus=settings.runner_docker_cpus,
