@@ -44,31 +44,6 @@ class AuthRepository:
         )
         return list(self._session.execute(statement).scalars().all())
 
-    def get_workspace_by_id(self, workspace_id: str) -> Workspace | None:
-        statement = select(Workspace).where(Workspace.id == workspace_id)
-        return self._session.execute(statement).scalar_one_or_none()
-
-    def create_guest_session(self, *, token_hash: str, ttl_days: int) -> AuthSession:
-        workspace = Workspace(
-            id=str(uuid4()),
-            title="게스트 작업공간",
-            is_guest=True,
-            owner_user_id=None,
-        )
-        auth_session = AuthSession(
-            id=str(uuid4()),
-            token_hash=token_hash,
-            user_id=None,
-            workspace_id=workspace.id,
-            expires_at=datetime.now(UTC) + timedelta(days=ttl_days),
-            workspace=workspace,
-        )
-        self._session.add(workspace)
-        self._session.add(auth_session)
-        self._session.commit()
-        self._session.refresh(auth_session)
-        return auth_session
-
     def create_user(self, *, email: str, password_hash: str, name: str) -> User:
         user = User(
             id=str(uuid4()),
@@ -110,45 +85,6 @@ class AuthRepository:
         self._session.commit()
         self._session.expire_all()
         return self.get_session_by_token_hash(token_hash)  # type: ignore[return-value]
-
-    def attach_guest_session_to_user(
-        self,
-        *,
-        auth_session: AuthSession,
-        user: User,
-        workspace_title: str,
-        ttl_days: int,
-    ) -> AuthSession:
-        workspace = auth_session.workspace
-        workspace.owner_user_id = user.id
-        workspace.is_guest = False
-        workspace.title = workspace_title
-        auth_session.user_id = user.id
-        auth_session.expires_at = datetime.now(UTC) + timedelta(days=ttl_days)
-        self._session.commit()
-        self._session.expire_all()
-        return self.get_session_by_token_hash(auth_session.token_hash)  # type: ignore[return-value]
-
-    def replace_session_user(
-        self,
-        *,
-        auth_session: AuthSession,
-        user_id: str,
-        workspace_id: str,
-        ttl_days: int,
-    ) -> AuthSession:
-        auth_session.user_id = user_id
-        auth_session.workspace_id = workspace_id
-        auth_session.expires_at = datetime.now(UTC) + timedelta(days=ttl_days)
-        self._session.commit()
-        self._session.expire_all()
-        return self.get_session_by_token_hash(auth_session.token_hash)  # type: ignore[return-value]
-
-    def switch_workspace(self, *, auth_session: AuthSession, workspace_id: str) -> AuthSession:
-        auth_session.workspace_id = workspace_id
-        self._session.commit()
-        self._session.expire_all()
-        return self.get_session_by_token_hash(auth_session.token_hash)  # type: ignore[return-value]
 
     def delete_session(self, auth_session: AuthSession) -> None:
         self._session.delete(auth_session)

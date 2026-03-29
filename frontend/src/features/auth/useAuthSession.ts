@@ -4,6 +4,7 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  UnauthorizedError,
 } from '../../lib/api';
 import type { AuthSessionState } from '../../types/auth';
 
@@ -21,6 +22,10 @@ export function useAuthSession() {
       setAuthState(state);
     } catch (bootstrapError) {
       console.error(bootstrapError);
+      if (bootstrapError instanceof UnauthorizedError) {
+        setAuthState(null);
+        return;
+      }
       setError(
         bootstrapError instanceof Error
           ? bootstrapError.message
@@ -35,6 +40,18 @@ export function useAuthSession() {
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
+
+  useEffect(() => {
+    const handleAuthRequired = () => {
+      setAuthState(null);
+      setIsLoading(false);
+      setIsSubmitting(false);
+      setError(null);
+    };
+
+    window.addEventListener('codeviz:auth-required', handleAuthRequired);
+    return () => window.removeEventListener('codeviz:auth-required', handleAuthRequired);
+  }, []);
 
   const handleRegister = useCallback(async (params: {
     email: string;
@@ -68,7 +85,11 @@ export function useAuthSession() {
       return true;
     } catch (loginError) {
       console.error(loginError);
-      setError(loginError instanceof Error ? loginError.message : '로그인에 실패했습니다.');
+      if (loginError instanceof UnauthorizedError) {
+        setError('이메일 또는 비밀번호를 다시 확인해 주세요.');
+      } else {
+        setError(loginError instanceof Error ? loginError.message : '로그인에 실패했습니다.');
+      }
       return false;
     } finally {
       setIsSubmitting(false);

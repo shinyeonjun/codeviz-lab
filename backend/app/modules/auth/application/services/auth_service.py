@@ -9,7 +9,7 @@ from app.modules.auth.domain.security import (
     hash_session_token,
     verify_password,
 )
-from app.modules.auth.infrastructure.persistence.models import AuthSession
+from app.modules.auth.infrastructure.persistence.models import AuthSession, User
 from app.modules.auth.infrastructure.persistence.repository import AuthRepository
 from app.modules.auth.presentation.http.schemas import (
     AuthSessionRead,
@@ -17,6 +17,7 @@ from app.modules.auth.presentation.http.schemas import (
     LoginCreate,
     RegisterCreate,
 )
+from app.modules.workspaces.infrastructure.persistence.models import Workspace
 
 
 class AuthService:
@@ -37,19 +38,9 @@ class AuthService:
             password_hash=hash_password(payload.password),
             name=payload.name,
         )
-        workspace = self._repository.create_workspace(
-            owner_user_id=user.id,
-            title=f"{payload.name}의 기본 공간",
-            is_guest=False,
-        )
-        raw_token = session_token or generate_session_token()
-        auth_session = self._repository.create_session(
-            token_hash=hash_session_token(raw_token),
-            user_id=user.id,
-            workspace_id=workspace.id,
-            ttl_days=settings.auth_session_ttl_days,
-        )
-        return self._build_state_from_session(auth_session), raw_token
+        workspace = self._get_or_create_primary_workspace(user=user)
+        self._delete_existing_session(session_token)
+        return self._issue_session_for_user(user=user, workspace=workspace)
 
     def login(
         self,
@@ -61,33 +52,12 @@ class AuthService:
         if user is None or not verify_password(payload.password, user.password_hash):
             raise InvalidCredentialsError()
 
-        workspaces = self._repository.get_user_workspaces(user.id)
-        if not workspaces:
-            workspace = self._repository.create_workspace(
-                owner_user_id=user.id,
-                title=f"{user.name}의 기본 공간",
-                is_guest=False,
-            )
-            workspaces = [workspace]
-
-        existing_context = self.get_auth_context(session_token)
-        if existing_context is not None:
-            self._repository.delete_session(existing_context.session)
-
-        raw_token = generate_session_token()
-        auth_session = self._repository.create_session(
-            token_hash=hash_session_token(raw_token),
-            user_id=user.id,
-            workspace_id=workspaces[0].id,
-            ttl_days=settings.auth_session_ttl_days,
-        )
-        return self._build_state_from_session(auth_session), raw_token
+        workspace = self._get_or_create_primary_workspace(user=user)
+        self._delete_existing_session(session_token)
+        return self._issue_session_for_user(user=user, workspace=workspace)
 
     def logout(self, session_token: str | None) -> None:
-        context = self.get_auth_context(session_token)
-        if context is None:
-            return
-        self._repository.delete_session(context.session)
+        self._delete_existing_session(session_token)
 
     def get_auth_context(self, session_token: str | None) -> AuthContext | None:
         if not session_token:
@@ -95,11 +65,7 @@ class AuthService:
         auth_session = self._repository.get_session_by_token_hash(hash_session_token(session_token))
         if auth_session is None or auth_session.user is None:
             return None
-        return AuthContext(
-            session=auth_session,
-            workspace=auth_session.workspace,
-            user=auth_session.user,
-        )
+        return self._build_context_from_session(auth_session)
 
     def get_state(self, session_token: str | None) -> AuthSessionRead | None:
         context = self.get_auth_context(session_token)
@@ -107,22 +73,46 @@ class AuthService:
             return None
         return self._build_state(context)
 
-    def _build_state_from_session(self, auth_session: AuthSession) -> AuthSessionRead:
-        return self._build_state(
-            AuthContext(
-                session=auth_session,
-                workspace=auth_session.workspace,
-                user=auth_session.user,
-            )
+    def _get_or_create_primary_workspace(self, *, user: User) -> Workspace:
+        workspaces = self._repository.get_user_workspaces(user.id)
+        if workspaces:
+            return workspaces[0]
+        return self._repository.create_workspace(
+            owner_user_id=user.id,
+            title=f"{user.name}의 기본 공간",
+            is_guest=False,
+        )
+
+    def _issue_session_for_user(self, *, user: User, workspace: Workspace) -> tuple[AuthSessionRead, str]:
+        raw_token = generate_session_token()
+        auth_session = self._repository.create_session(
+            token_hash=hash_session_token(raw_token),
+            user_id=user.id,
+            workspace_id=workspace.id,
+            ttl_days=settings.auth_session_ttl_days,
+        )
+        return self._build_state(self._build_context_from_session(auth_session)), raw_token
+
+    def _delete_existing_session(self, session_token: str | None) -> None:
+        context = self.get_auth_context(session_token)
+        if context is None:
+            return
+        self._repository.delete_session(context.session)
+
+    def _build_context_from_session(self, auth_session: AuthSession) -> AuthContext:
+        return AuthContext(
+            session=auth_session,
+            workspace=auth_session.workspace,
+            user=auth_session.user,
         )
 
     def _build_state(self, context: AuthContext) -> AuthSessionRead:
         return AuthSessionRead(
-            is_authenticated=context.user is not None,
-            user=self._to_user_read(context.user) if context.user is not None else None,
+            is_authenticated=True,
+            user=self._to_user_read(context.user),
         )
 
-    def _to_user_read(self, user) -> AuthUserRead:
+    def _to_user_read(self, user: User) -> AuthUserRead:
         return AuthUserRead(
             id=user.id,
             email=user.email,

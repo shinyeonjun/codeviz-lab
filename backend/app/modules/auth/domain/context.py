@@ -8,4 +8,4 @@ from app.modules.workspaces.infrastructure.persistence.models import Workspace
 class AuthContext:
     session: AuthSession
     workspace: Workspace
-    user: User | None = None
+    user: User

@@ -19,6 +19,13 @@ interface ApiSuccess<T> {
   meta?: Record<string, unknown>;
 }
 
+export class UnauthorizedError extends Error {
+  constructor(message = '로그인이 필요합니다.') {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
 function isAbsoluteUrl(value: string) {
   return /^https?:\/\//i.test(value);
 }
@@ -43,6 +50,10 @@ async function parseResponse<T>(response: Response): Promise<T> {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent('codeviz:auth-required'));
+      throw new UnauthorizedError(payload.detail || '로그인이 필요합니다.');
+    }
     const message =
       payload.detail ||
       payload.message ||

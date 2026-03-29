@@ -27,6 +27,6 @@ def get_optional_auth_context(
 def get_required_auth_context(
     context: AuthContext | None = Depends(get_optional_auth_context),
 ) -> AuthContext:
-    if context is None or context.user is None:
+    if context is None:
         raise HTTPException(status_code=401, detail="로그인이 필요합니다.")
     return context

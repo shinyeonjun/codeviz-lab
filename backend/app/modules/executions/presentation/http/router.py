@@ -57,7 +57,7 @@ async def stream_execution(
 ) -> None:
     session_token = websocket.cookies.get(settings.auth_cookie_name)
     auth_context = auth_service.get_auth_context(session_token)
-    if auth_context is None or auth_context.user is None:
+    if auth_context is None:
         await websocket.close(code=4401, reason="로그인이 필요합니다.")
         return
 
