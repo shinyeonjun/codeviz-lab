@@ -34,10 +34,27 @@ cp deploy/.env.production.example deploy/.env.production
 최소한 아래 값은 반드시 수정합니다.
 
 - `APP_DOMAIN`
+- `SITE_ADDRESS`
+- `APP_ORIGIN`
 - `CADDY_EMAIL`
 - `POSTGRES_PASSWORD`
 - `OPENAI_API_KEY` (AI selector 사용할 때)
 - `VISUALIZATION_SELECTOR_BACKEND=openai` 또는 `manual`
+- `AUTH_COOKIE_SECURE`
+
+첫 배포를 IP 주소로 먼저 확인할 때는 아래처럼 두는 것을 권장합니다.
+
+- `APP_DOMAIN=34.64.113.142`
+- `SITE_ADDRESS=http://34.64.113.142`
+- `APP_ORIGIN=http://34.64.113.142`
+- `AUTH_COOKIE_SECURE=false`
+
+도메인과 HTTPS를 붙인 뒤에는 아래처럼 바꿉니다.
+
+- `APP_DOMAIN=codeviz.example.com`
+- `SITE_ADDRESS=codeviz.example.com`
+- `APP_ORIGIN=https://codeviz.example.com`
+- `AUTH_COOKIE_SECURE=true`
 
 ## 5. GitHub Actions 시크릿
 

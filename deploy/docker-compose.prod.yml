@@ -29,8 +29,8 @@ services:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       RUNNER_BACKEND: docker
       RUNNER_DOCKER_IMAGE: codeviz-python-sandbox:latest
-      AUTH_COOKIE_SECURE: "true"
-      CORS_ORIGINS: https://${APP_DOMAIN}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE}
+      CORS_ORIGINS: ${APP_ORIGIN}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 

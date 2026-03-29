@@ -20,6 +20,7 @@ backend/test_codeviz.db
 backend/.env
 deploy/.env.production
 deploy/.env.production.local
+deploy/keys/
 backend/backend-dev.log
 backend/backend-dev.err.log
 
