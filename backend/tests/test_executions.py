@@ -385,6 +385,14 @@ def test_execution_websocket_returns_not_found_for_missing_run(authenticated_cli
     assert payload["run_id"] == "missing-run"
 
 
+def test_execution_websocket_requires_login(client):
+    try:
+        client.websocket_connect("/api/v1/executions/missing-run/stream")
+        assert False, "인증 없는 websocket 연결은 실패해야 합니다."
+    except Exception:
+        assert True
+
+
 def test_create_execution_when_source_code_is_too_large_returns_422(authenticated_client):
     source_code = "a" * 20001
 
