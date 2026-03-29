@@ -1,6 +1,9 @@
+export type ExecutionLanguage = 'python' | 'c';
+
 export type VisualizationKind =
   | 'array-bars'
   | 'array-cells'
+  | 'palindrome-pointers'
   | 'stack-vertical'
   | 'queue-horizontal'
   | 'call-stack'
@@ -40,7 +43,7 @@ export interface VisualizationData {
 
 export interface ExecutionResult {
   run_id: string;
-  language: string;
+  language: ExecutionLanguage;
   visualizationMode: VisualizationMode;
   status: string;
   source_code: string;

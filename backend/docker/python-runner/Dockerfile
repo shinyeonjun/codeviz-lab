@@ -7,7 +7,7 @@ RUN useradd --create-home --uid 10001 sandbox
 
 WORKDIR /sandbox
 
-COPY backend/app/modules/executions/infrastructure/runners/sandbox_trace_runner.py /sandbox/sandbox_trace_runner.py
+COPY backend/app/modules/executions/infrastructure/runners/languages/python/sandbox_trace_runner.py /sandbox/sandbox_trace_runner.py
 
 USER sandbox
 

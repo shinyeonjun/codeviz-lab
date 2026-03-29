@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import type { VisualizationStepState } from '../../../types/execution';
 import { asEdgeList, asNodeList, asStringSet } from '../utils/visualizationUtils';
 import { DetailChip } from '../components/VisualizationCommon';
@@ -47,11 +48,22 @@ export function TreeRenderer({ state }: { state: VisualizationStepState }) {
       setLines(newLines);
     };
 
-    updateLines();
-    const timer = setTimeout(updateLines, 50);
+    let animationFrameId: number;
+    const startTime = performance.now();
+
+    const animateLines = (time: number) => {
+      updateLines();
+      // framer-motion spring 레이아웃 애니메이션 시간에 맞춰 충분히 루프
+      if (time - startTime < 800) {
+        animationFrameId = requestAnimationFrame(animateLines);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animateLines);
     window.addEventListener('resize', updateLines);
+
     return () => {
-      clearTimeout(timer);
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', updateLines);
     };
   }, [edges, nodes, state]);
@@ -123,15 +135,17 @@ export function TreeRenderer({ state }: { state: VisualizationStepState }) {
                       : 'border-surface-border bg-white text-ink shadow-sm';
 
                   return (
-                    <div
+                    <motion.div
                       key={nodeId}
+                      layout
+                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                       data-node-id={nodeId}
-                      className={`flex h-12 min-w-[3rem] shrink-0 items-center justify-center rounded-full border px-4 transition-all ${classes}`}
+                      className={`flex h-12 min-w-[3rem] shrink-0 items-center justify-center rounded-full border px-4 transition-colors ${classes}`}
                     >
                       <div className={`font-mono text-sm ${isActive ? 'font-bold' : 'font-semibold'}`}>
                         {String(node.label ?? node.value ?? nodeId)}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

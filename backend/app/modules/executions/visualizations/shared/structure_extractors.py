@@ -99,6 +99,19 @@ def build_scalar_sequence_map(locals_snapshot: dict[str, Any]) -> dict[str, list
     return sequence_map
 
 
+def build_character_sequence_map(locals_snapshot: dict[str, Any]) -> dict[str, list[str]]:
+    sequence_map: dict[str, list[str]] = {}
+
+    for name, value in locals_snapshot.items():
+        if not isinstance(value, str):
+            continue
+        if not value:
+            continue
+        sequence_map[name] = list(value)
+
+    return sequence_map
+
+
 def build_numeric_matrix_map(locals_snapshot: dict[str, Any]) -> dict[str, list[list[int | float]]]:
     matrix_map: dict[str, list[list[int | float]]] = {}
 

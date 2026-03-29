@@ -1,7 +1,10 @@
 import Editor from '@monaco-editor/react';
 
+import type { ExecutionLanguage } from '../../../types/execution';
+
 interface CodeEditorPanelProps {
   fileName: string;
+  language: ExecutionLanguage;
   code: string;
   onChange: (value: string) => void;
   editorRef: React.MutableRefObject<any>;
@@ -9,6 +12,7 @@ interface CodeEditorPanelProps {
 
 export function CodeEditorPanel({
   fileName,
+  language,
   code,
   onChange,
   editorRef,
@@ -21,7 +25,8 @@ export function CodeEditorPanel({
       <div className="h-[500px]">
         <Editor
           height="100%"
-          defaultLanguage="python"
+          language={language}
+          defaultLanguage={language}
           value={code}
           onChange={(value) => onChange(value || '')}
           theme="vs-dark"

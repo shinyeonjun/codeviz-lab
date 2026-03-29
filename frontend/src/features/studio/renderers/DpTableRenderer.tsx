@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import type { VisualizationStepState } from '../../../types/execution';
 import { asCellKeys, asMatrix, asScalarBadges } from '../utils/visualizationUtils';
 import { DetailChip, ScalarBadgeList } from '../components/VisualizationCommon';
@@ -21,7 +22,7 @@ export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
         {activeCellLabels.length > 0 && <DetailChip label="cells" value={activeCellLabels.join(', ')} />}
       </div>
       <ScalarBadgeList badges={scalarBadges} />
-      <div className="space-y-2">
+      <motion.div layout className="space-y-2">
         {matrix.length > 0 && (
           <div className="flex gap-2 pl-9">
             {matrix[0].map((_, colIndex) => (
@@ -32,7 +33,7 @@ export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
           </div>
         )}
         {matrix.map((row, rowIndex) => (
-          <div key={`row-${rowIndex}`} className="flex items-center gap-2">
+          <motion.div layout key={`row-${rowIndex}`} className="flex items-center gap-2">
             <div className="flex h-12 w-7 items-center justify-center text-[11px] text-ink-faint">{rowIndex}</div>
             {row.map((value, colIndex) => {
               const key = `${rowIndex}:${colIndex}`;
@@ -45,14 +46,19 @@ export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
                   : 'border-surface-border bg-white text-ink';
 
               return (
-                <div key={key} className={`flex h-12 w-12 items-center justify-center rounded-lg border transition-all ${classes}`}>
+                <motion.div 
+                  key={key} 
+                  layout
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className={`flex h-12 w-12 items-center justify-center rounded-lg border transition-colors ${classes}`}
+                >
                   <span className={`font-mono text-sm ${isActive ? 'font-bold text-ink' : 'font-semibold text-ink-secondary'}`}>{String(value)}</span>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

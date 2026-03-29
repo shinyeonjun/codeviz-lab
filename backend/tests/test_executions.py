@@ -1,3 +1,8 @@
+import shutil
+
+import pytest
+
+
 def test_create_and_read_execution(authenticated_client):
     source_code = "\n".join(
         [
@@ -144,6 +149,38 @@ def test_create_execution_with_array_cells_returns_cell_payload(authenticated_cl
     assert payload["visualization"]["kind"] == "array-cells"
     assert payload["visualization"]["sourceVariable"] == "tokens"
     assert payload["visualization"]["stepStates"][0]["payload"]["items"] == ["A", "B", "C"]
+
+
+def test_create_execution_with_palindrome_pointers_returns_pointer_payload(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "text = 'level'\n"
+                "left = 0\n"
+                "right = len(text) - 1\n"
+                "while left < right:\n"
+                "    if text[left] != text[right]:\n"
+                "        break\n"
+                "    left += 1\n"
+                "    right -= 1\n"
+                "print(True)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "palindrome-pointers",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["visualizationMode"] == "palindrome-pointers"
+    assert payload["visualization"]["kind"] == "palindrome-pointers"
+    assert payload["visualization"]["sourceVariable"] == "text"
+    first_step = payload["visualization"]["stepStates"][0]["payload"]
+    assert first_step["items"] == ["l", "e", "v", "e", "l"]
+    assert "leftIndex" in first_step
+    assert "rightIndex" in first_step
 
 
 def test_create_execution_with_stack_vertical_returns_stack_payload(authenticated_client):
@@ -415,3 +452,39 @@ def test_create_execution_when_stdout_contains_surrogate_returns_sanitized_text(
     payload = response.json()["data"]
     assert payload["status"] == "completed"
     assert "\\udcbe" in payload["stdout"]
+
+
+@pytest.mark.skipif(shutil.which("gcc") is None, reason="gcc가 없는 환경에서는 C 실행 테스트를 건너뜁니다.")
+def test_create_execution_with_c_code_returns_trace_when_gdb_is_available(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "c",
+            "source_code": (
+                "#include <stdio.h>\n"
+                "\n"
+                "int main(void) {\n"
+                "    int a = 2;\n"
+                "    int b = 4;\n"
+                "    printf(\"%d\\n\", a + b);\n"
+                "    return 0;\n"
+                "}\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["language"] == "c"
+    assert payload["status"] == "completed"
+    assert payload["stdout"] == "6\n"
+    assert payload["visualizationMode"] == "none"
+    assert payload["visualization"] is None
+
+    if shutil.which("gdb") is None:
+        assert payload["step_count"] == 0
+    else:
+        assert payload["step_count"] >= 1
+        assert any(step["function_name"] == "main" for step in payload["steps"])

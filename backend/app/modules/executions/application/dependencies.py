@@ -10,8 +10,19 @@ from app.modules.executions.domain.ports import (
     TraceRunnerProtocol,
 )
 from app.modules.executions.infrastructure.persistence.repository import SqlAlchemyExecutionRepository
-from app.modules.executions.infrastructure.runners.docker_trace_runner import DockerTraceRunner
-from app.modules.executions.infrastructure.runners.local_python_trace_runner import (
+from app.modules.executions.infrastructure.runners.language_dispatch_runner import (
+    LanguageDispatchTraceRunner,
+)
+from app.modules.executions.infrastructure.runners.languages.c.docker_runner import (
+    DockerCExecutionRunner,
+)
+from app.modules.executions.infrastructure.runners.languages.c.local_runner import (
+    LocalCExecutionRunner,
+)
+from app.modules.executions.infrastructure.runners.languages.python.docker_runner import (
+    DockerTraceRunner,
+)
+from app.modules.executions.infrastructure.runners.languages.python.local_runner import (
     LocalPythonTraceRunner,
 )
 from app.modules.executions.selection.base.interfaces import VisualizationSelectorProtocol
@@ -42,6 +53,9 @@ from app.modules.executions.visualizations.templates.mode_aliases.template impor
 from app.modules.executions.visualizations.templates.none.template import (
     NoVisualizationExecutionTemplate,
 )
+from app.modules.executions.visualizations.templates.palindrome_pointers.template import (
+    PalindromePointersExecutionTemplate,
+)
 from app.modules.executions.visualizations.templates.queue_horizontal.template import (
     QueueHorizontalExecutionTemplate,
 )
@@ -56,6 +70,7 @@ from app.modules.executions.visualizations.templates.tree_binary.template import
 def build_execution_visualization_registry() -> ExecutionVisualizationRegistry:
     array_bars = ArrayBarsExecutionTemplate()
     array_cells = ArrayCellsExecutionTemplate()
+    palindrome_pointers = PalindromePointersExecutionTemplate()
     stack_vertical = StackVerticalExecutionTemplate()
     queue_horizontal = QueueHorizontalExecutionTemplate()
     call_stack = CallStackExecutionTemplate()
@@ -78,7 +93,6 @@ def build_execution_visualization_registry() -> ExecutionVisualizationRegistry:
         AliasExecutionTemplate(visualization_mode="sliding-window-fixed", builder=array_cells.build),
         AliasExecutionTemplate(visualization_mode="sliding-window-variable", builder=array_cells.build),
         AliasExecutionTemplate(visualization_mode="prefix-sum-array", builder=array_cells.build),
-        AliasExecutionTemplate(visualization_mode="palindrome-pointers", builder=array_cells.build),
         AliasExecutionTemplate(visualization_mode="deque-both-ends", builder=queue_horizontal.build),
         AliasExecutionTemplate(visualization_mode="monotonic-stack", builder=stack_vertical.build),
         AliasExecutionTemplate(visualization_mode="stack-expression", builder=stack_vertical.build),
@@ -106,6 +120,7 @@ def build_execution_visualization_registry() -> ExecutionVisualizationRegistry:
             NoVisualizationExecutionTemplate(),
             array_bars,
             array_cells,
+            palindrome_pointers,
             stack_vertical,
             queue_horizontal,
             call_stack,
@@ -125,22 +140,45 @@ def get_execution_repository(
 
 def get_trace_runner() -> TraceRunnerProtocol:
     if settings.runner_backend == "local":
-        return LocalPythonTraceRunner(
-            timeout_seconds=settings.runner_timeout_seconds,
-            max_trace_steps=settings.runner_max_trace_steps,
-            max_stdout_chars=settings.runner_max_stdout_chars,
+        return LanguageDispatchTraceRunner(
+            runners={
+                "python": LocalPythonTraceRunner(
+                    timeout_seconds=settings.runner_timeout_seconds,
+                    max_trace_steps=settings.runner_max_trace_steps,
+                    max_stdout_chars=settings.runner_max_stdout_chars,
+                ),
+                "c": LocalCExecutionRunner(
+                    timeout_seconds=settings.runner_timeout_seconds,
+                    max_trace_steps=settings.runner_max_trace_steps,
+                    max_stdout_chars=settings.runner_max_stdout_chars,
+                ),
+            }
         )
 
     if settings.runner_backend == "docker":
-        return DockerTraceRunner(
-            timeout_seconds=settings.runner_timeout_seconds,
-            image=settings.runner_docker_image,
-            memory_limit=settings.runner_docker_memory_limit,
-            cpus=settings.runner_docker_cpus,
-            pids_limit=settings.runner_docker_pids_limit,
-            tmpfs_size=settings.runner_docker_tmpfs_size,
-            max_trace_steps=settings.runner_max_trace_steps,
-            max_stdout_chars=settings.runner_max_stdout_chars,
+        return LanguageDispatchTraceRunner(
+            runners={
+                "python": DockerTraceRunner(
+                    timeout_seconds=settings.runner_timeout_seconds,
+                    image=settings.runner_docker_image,
+                    memory_limit=settings.runner_docker_memory_limit,
+                    cpus=settings.runner_docker_cpus,
+                    pids_limit=settings.runner_docker_pids_limit,
+                    tmpfs_size=settings.runner_docker_tmpfs_size,
+                    max_trace_steps=settings.runner_max_trace_steps,
+                    max_stdout_chars=settings.runner_max_stdout_chars,
+                ),
+                "c": DockerCExecutionRunner(
+                    timeout_seconds=settings.runner_timeout_seconds,
+                    image=settings.runner_docker_c_image,
+                    memory_limit=settings.runner_docker_memory_limit,
+                    cpus=settings.runner_docker_cpus,
+                    pids_limit=settings.runner_docker_pids_limit,
+                    tmpfs_size=settings.runner_docker_tmpfs_size,
+                    max_trace_steps=settings.runner_max_trace_steps,
+                    max_stdout_chars=settings.runner_max_stdout_chars,
+                ),
+            }
         )
 
     raise HTTPException(status_code=500, detail="아직 지원하지 않는 실행기입니다.")

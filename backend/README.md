@@ -114,6 +114,7 @@ cd D:\hohyun\backend
 이 스크립트는 다음을 처리합니다.
 
 - Python sandbox 이미지 빌드
+- C sandbox 이미지 빌드
 - PostgreSQL + pgvector 컨테이너 실행
 - Docker sandbox 제한값을 환경 변수로 주입
 
@@ -136,11 +137,16 @@ cd D:\hohyun\backend
 
 ## 현재 구현 범위
 
-- Python 코드 실행
-- 실행 결과 trace 생성
+- Python 코드 실행 및 trace 생성
+- C 코드 컴파일 및 실행
 - 실행 결과 DB 저장
 - 예제 코드 조회
 - 실행 결과 WebSocket 스냅샷 스트림
+
+## 언어 지원 현황
+
+- `python`: 실행 + trace + 시각화 템플릿 지원
+- `c`: 컴파일 + 실행 지원, 현재는 trace 없이 결과 중심 실행
 
 ## 이후 확장 포인트
 

@@ -1,4 +1,5 @@
 import type {
+  ExecutionLanguage,
   ExecutionResult,
   VisualizationMode,
   VisualizationRequestMode,
@@ -104,6 +105,7 @@ export async function fetchLearningLessonDetail(lessonId: string): Promise<Learn
 }
 
 export async function executeCode(params: {
+  language: ExecutionLanguage;
   sourceCode: string;
   visualizationMode: VisualizationRequestMode;
   stdin?: string;
@@ -114,7 +116,7 @@ export async function executeCode(params: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      language: 'python',
+      language: params.language,
       source_code: params.sourceCode,
       stdin: params.stdin ?? '',
       visualizationMode: params.visualizationMode,

@@ -14,11 +14,12 @@ class Settings(BaseSettings):
     runner_backend: str = "docker"
     runner_timeout_seconds: int = 5
     runner_docker_image: str = "codeviz-python-sandbox:latest"
+    runner_docker_c_image: str = "codeviz-c-sandbox:latest"
     runner_docker_memory_limit: str = "256m"
     runner_docker_cpus: str = "0.5"
     runner_docker_pids_limit: int = 64
     runner_docker_tmpfs_size: str = "64m"
-    runner_max_trace_steps: int = 500
+    runner_max_trace_steps: int = 0
     runner_max_stdout_chars: int = 10000
     runner_max_source_code_chars: int = 20000
     runner_max_stdin_chars: int = 4000

@@ -1,6 +1,9 @@
 from subprocess import CompletedProcess, TimeoutExpired
 
 from app.modules.executions.entities import TraceExecutionCommand
+from app.modules.executions.infrastructure.runners.languages.c.docker_runner import (
+    DockerCExecutionRunner,
+)
 from app.modules.executions.runners.docker_trace_runner import DockerTraceRunner
 
 
@@ -75,3 +78,41 @@ def test_docker_runner_force_removes_container_on_timeout(monkeypatch):
 
     assert result.status == "timeout"
     assert any(command[:3] == ["docker", "rm", "-f"] for command in calls)
+
+
+def test_c_docker_runner_uses_executable_tmpfs(monkeypatch):
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        return CompletedProcess(
+            args=command,
+            returncode=0,
+            stdout=b'{"status":"completed","stdout":"6\\n","stderr":"","error_message":null,"steps":[]}',
+            stderr=b"",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    runner = DockerCExecutionRunner(
+        timeout_seconds=3,
+        image="codeviz-c-sandbox:latest",
+        memory_limit="256m",
+        cpus="0.5",
+        pids_limit=64,
+        tmpfs_size="64m",
+        max_trace_steps=500,
+        max_stdout_chars=10000,
+    )
+
+    result = runner.run(
+        TraceExecutionCommand(
+            language="c",
+            source_code='#include <stdio.h>\nint main(void){ printf("6\\n"); return 0; }\n',
+            stdin="",
+        )
+    )
+
+    assert result.status == "completed"
+    tmpfs_index = captured["command"].index("--tmpfs") + 1
+    assert "exec" in captured["command"][tmpfs_index]

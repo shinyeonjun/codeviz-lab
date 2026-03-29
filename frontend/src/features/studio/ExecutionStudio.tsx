@@ -34,6 +34,7 @@ function buildStageSeed(lesson: LearningLesson, stage: LearningStage): StudioLes
       title: lesson.implementationChallenge.title,
       categoryName: lesson.categoryName,
       description: lesson.implementationChallenge.prompt,
+      language: lesson.language,
       visualizationMode: lesson.visualizationMode,
       sourceCode: lesson.implementationChallenge.starterCode,
       difficulty: lesson.difficulty,
@@ -48,6 +49,7 @@ function buildStageSeed(lesson: LearningLesson, stage: LearningStage): StudioLes
     title: lesson.learningContent.title,
     categoryName: lesson.categoryName,
     description: lesson.learningContent.summary,
+    language: lesson.language,
     visualizationMode: lesson.visualizationMode,
     sourceCode: lesson.learningContent.walkthroughCode,
     difficulty: lesson.difficulty,
@@ -70,6 +72,7 @@ export function ExecutionStudio({
 
   const {
     code,
+    language,
     visualizationMode,
     isRunning,
     execution,
@@ -177,7 +180,13 @@ export function ExecutionStudio({
             </div>
           </div>
 
-          <CodeEditorPanel fileName="main.py" code={code} onChange={setCode} editorRef={editorRef} />
+          <CodeEditorPanel
+            fileName={language === 'c' ? 'main.c' : 'main.py'}
+            language={language}
+            code={code}
+            onChange={setCode}
+            editorRef={editorRef}
+          />
         </div>
 
         <div className="space-y-3">
@@ -186,10 +195,13 @@ export function ExecutionStudio({
             isPlaying={isPlaying}
             stepIndex={stepIndex}
             totalSteps={totalSteps}
+            playbackSpeed={studio.playbackSpeed}
             onTogglePlay={togglePlay}
             onPrev={stepPrev}
             onNext={stepNext}
             onReset={stepReset}
+            onSeek={studio.seekStep}
+            onPlaybackSpeedChange={studio.setPlaybackSpeed}
           />
 
           <ExecutionErrorPanel requestError={requestError} execution={execution} />

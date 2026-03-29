@@ -1,4 +1,4 @@
-import type { VisualizationMode } from './execution';
+import type { ExecutionLanguage, VisualizationMode } from './execution';
 
 export interface LearningCategory {
   id: string;
@@ -15,7 +15,7 @@ export interface LearningLessonSummary {
   categoryId: string;
   categoryName: string;
   description: string;
-  language: 'python';
+  language: ExecutionLanguage;
   visualizationMode: VisualizationMode;
   difficulty: string;
   estimatedMinutes: number;
@@ -52,6 +52,7 @@ export interface StudioLessonSeed {
   title: string;
   categoryName: string;
   description: string;
+  language: ExecutionLanguage;
   visualizationMode: VisualizationMode;
   sourceCode: string;
   difficulty: string;

@@ -27,6 +27,7 @@ function createEmptyExamSeed(): StudioLessonSeed {
     title: '시험을 준비하는 중',
     categoryName: '시험',
     description: '카테고리를 선택하고 시험을 시작하세요.',
+    language: 'python',
     visualizationMode: 'none',
     sourceCode: '',
     difficulty: '시험',
@@ -42,6 +43,7 @@ function buildQuestionSeed(question: ExamQuestion, code: string): StudioLessonSe
     title: question.title,
     categoryName: question.categoryName,
     description: question.prompt,
+    language: 'python',
     visualizationMode: question.visualizationMode,
     sourceCode: code,
     difficulty: question.difficulty,
@@ -426,6 +428,7 @@ export function ExamCenter() {
 
               <CodeEditorPanel
                 fileName="exam.py"
+                language="python"
                 code={studio.code}
                 onChange={handleCodeChange}
                 editorRef={editorRef}
@@ -438,10 +441,13 @@ export function ExamCenter() {
                 isPlaying={studio.isPlaying}
                 stepIndex={studio.stepIndex}
                 totalSteps={studio.totalSteps}
+                playbackSpeed={studio.playbackSpeed}
                 onTogglePlay={studio.togglePlay}
                 onPrev={studio.stepPrev}
                 onNext={studio.stepNext}
                 onReset={studio.stepReset}
+                onSeek={studio.seekStep}
+                onPlaybackSpeedChange={studio.setPlaybackSpeed}
               />
 
               <ExecutionErrorPanel requestError={studio.requestError} execution={studio.execution} />

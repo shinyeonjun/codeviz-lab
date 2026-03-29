@@ -18,6 +18,7 @@ function createEmptyLesson(): StudioLessonSeed {
     title: '학습을 불러오는 중',
     categoryName: '대기',
     description: '학습 데이터를 불러오는 중입니다.',
+    language: 'python',
     visualizationMode: 'none',
     sourceCode: '',
     difficulty: '입문',

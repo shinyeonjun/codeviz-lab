@@ -6,6 +6,7 @@ from pydantic import AliasChoices, BaseModel, Field
 VisualizationKind = Literal[
     "array-bars",
     "array-cells",
+    "palindrome-pointers",
     "stack-vertical",
     "queue-horizontal",
     "call-stack",
@@ -18,7 +19,7 @@ VisualizationRequestMode = str
 
 
 class ExecutionCreate(BaseModel):
-    language: Literal["python"] = "python"
+    language: Literal["python", "c"] = "python"
     source_code: str = Field(min_length=1)
     stdin: str = ""
     visualization_mode: VisualizationRequestMode = Field(

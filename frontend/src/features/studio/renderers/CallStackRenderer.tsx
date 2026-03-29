@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import type { VisualizationStepState } from '../../../types/execution';
 import { asNodeList } from '../utils/visualizationUtils';
 import { DetailChip } from '../components/VisualizationCommon';
@@ -18,25 +19,35 @@ export function CallStackRenderer({ state }: { state: VisualizationStepState }) 
         {activeFunction && <DetailChip label="active" value={activeFunction} />}
       </div>
       <div className="flex flex-col-reverse gap-2">
-        {frames.map((frame, index) => {
-          const name = String(frame.functionName ?? `frame-${index}`);
-          const isActive = Boolean(frame.isActive);
-          const classes = isActive ? 'border-ink bg-surface-soft ring-1 ring-ink' : 'border-surface-border bg-white';
+        <AnimatePresence mode="popLayout">
+          {frames.map((frame, index) => {
+            const name = String(frame.functionName ?? `frame-${index}`);
+            const isActive = Boolean(frame.isActive);
+            const classes = isActive ? 'border-ink bg-surface-soft ring-1 ring-ink' : 'border-surface-border bg-white';
 
-          return (
-            <div key={`${name}-${index}`} className="space-y-1">
-              <div
-                className={`rounded-xl border px-4 py-3 transition-all ${classes}`}
+            return (
+              <motion.div 
+                key={`${name}-${index}`} 
+                layout
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                className="space-y-1"
               >
-                <div className="text-xs text-ink-muted">depth {String(frame.depth ?? index)}</div>
-                <div className={`mt-1 font-mono text-sm ${isActive ? 'font-bold text-ink' : 'font-semibold text-ink-secondary'}`}>{name}</div>
-              </div>
-              {index < frames.length - 1 && (
-                <div className="flex justify-center text-xs text-ink-faint">↑ return / ↓ call</div>
-              )}
-            </div>
-          );
-        })}
+                <div
+                  className={`rounded-xl border px-4 py-3 transition-colors ${classes}`}
+                >
+                  <div className="text-xs text-ink-muted">depth {String(frame.depth ?? index)}</div>
+                  <div className={`mt-1 font-mono text-sm ${isActive ? 'font-bold text-ink' : 'font-semibold text-ink-secondary'}`}>{name}</div>
+                </div>
+                {index < frames.length - 1 && (
+                  <div className="flex justify-center text-xs text-ink-faint">↑ return / ↓ call</div>
+                )}
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );

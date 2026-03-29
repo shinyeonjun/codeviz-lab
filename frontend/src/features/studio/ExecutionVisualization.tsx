@@ -7,6 +7,7 @@ import type {
 } from '../../types/execution';
 import { ArrayBarsRenderer } from './renderers/ArrayBarsRenderer';
 import { ArrayCellsRenderer } from './renderers/ArrayCellsRenderer';
+import { PalindromePointersRenderer } from './renderers/PalindromePointersRenderer';
 import { StackRenderer } from './renderers/StackRenderer';
 import { QueueRenderer } from './renderers/QueueRenderer';
 import { CallStackRenderer } from './renderers/CallStackRenderer';
@@ -19,6 +20,7 @@ export const VISUALIZATION_MODE_OPTIONS: { id: VisualizationRequestMode; name: s
   { id: 'none', name: '코드 추적' },
   { id: 'array-bars', name: '배열 막대' },
   { id: 'array-cells', name: '배열 셀' },
+  { id: 'palindrome-pointers', name: '팰린드롬 포인터' },
   { id: 'stack-vertical', name: '스택' },
   { id: 'queue-horizontal', name: '큐' },
   { id: 'call-stack', name: '호출 스택' },
@@ -40,6 +42,7 @@ function getCurrentState(viz: VisualizationData, stepIndex: number): Visualizati
 const KIND_RENDERERS: Record<VisualizationKind, (props: { state: VisualizationStepState }) => JSX.Element> = {
   'array-bars': ArrayBarsRenderer,
   'array-cells': ArrayCellsRenderer,
+  'palindrome-pointers': PalindromePointersRenderer,
   'stack-vertical': StackRenderer,
   'queue-horizontal': QueueRenderer,
   'call-stack': CallStackRenderer,

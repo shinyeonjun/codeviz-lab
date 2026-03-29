@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import ast
 import json
-from collections import Counter
 from typing import Any
 
 import httpx
@@ -11,6 +9,10 @@ from app.modules.executions.selection.base.interfaces import VisualizationSelect
 from app.modules.executions.selection.base.schemas import (
     VisualizationSelectionContext,
     VisualizationSelectionResult,
+)
+from app.modules.executions.selection.shared import (
+    SUPPORTED_ANALYSIS_LANGUAGES,
+    analyze_source_code,
 )
 
 
@@ -49,6 +51,11 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
     def select(self, context: VisualizationSelectionContext) -> VisualizationSelectionResult:
         if context.requested_mode != "auto":
             return self._fallback_selector.select(context)
+
+        if context.language not in SUPPORTED_ANALYSIS_LANGUAGES:
+            return self._build_auto_fallback_result(
+                "현재 자동 시각화 선택이 지원되지 않는 언어라 기본 시각화 모드를 사용합니다."
+            )
 
         if not self._api_key:
             return self._build_auto_fallback_result("OpenAI API 키가 없어 기본 시각화 모드를 사용합니다.")
@@ -142,7 +149,7 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
 
     def _build_system_prompt(self) -> str:
         return (
-            "너는 Python 학습 플랫폼의 시각화 템플릿 선택기다.\n"
+            "너는 코드 학습 플랫폼의 시각화 템플릿 선택기다.\n"
             "반드시 지원된 시각화 모드 중 하나만 선택한다.\n"
             "코드를 실행하기 전에 정적 코드 구조만 보고 판단한다.\n"
             "가장 중요한 기준은 학습 효과다.\n"
@@ -151,6 +158,7 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
             "대안은 3개 이하로, 실제 후보만 우선순위 순서로 제시한다.\n"
             "reason은 한 문장 한국어로 짧고 구체적으로 쓴다.\n"
             "confidence는 0~1 사이 실수로, 구조가 명확할수록 높인다.\n"
+            "Python과 C 모두 같은 템플릿 체계를 사용한다.\n"
             "판단 기준:\n"
             "- array-bars: 숫자 배열의 정렬, 교환, shift, 삽입, 비교 인덱스 이동이 핵심일 때\n"
             "- array-selection-sort / array-bubble-sort / array-merge-process / array-quick-partition / array-heapify / array-shell-sort: 정렬 단계가 더 구체적으로 드러날 때\n"
@@ -177,11 +185,17 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
     def _build_user_prompt(self, context: VisualizationSelectionContext) -> str:
         source_code = context.source_code
         if len(source_code) > 6000:
-            source_code = f"{source_code[:6000]}\n# ... 이하 코드는 길이 제한으로 생략됨"
+            source_code = f"{source_code[:6000]}\n... 이하 코드는 길이 제한으로 생략됨"
 
-        analysis_summary = "\n".join(
-            f"- {line}" for line in self._build_analysis_summary(context.source_code)
+        analysis_snapshot = analyze_source_code(
+            language=context.language,
+            source_code=context.source_code,
+            supported_modes=self._supported_modes,
         )
+        analysis_summary = "\n".join(
+            f"- {line}" for line in analysis_snapshot.summary_lines
+        )
+        fence_language = "python" if context.language == "python" else "c"
 
         return (
             f"언어: {context.language}\n"
@@ -191,149 +205,10 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
             "출력은 JSON schema만 따르세요.\n\n"
             "정적 분석 요약:\n"
             f"{analysis_summary}\n\n"
-            "```python\n"
+            f"```{fence_language}\n"
             f"{source_code}\n"
             "```"
         )
-
-    def _build_analysis_summary(self, source_code: str) -> list[str]:
-        try:
-            tree = ast.parse(source_code)
-        except SyntaxError:
-            return ["구문 분석에 실패했습니다. 원본 코드만 참고해 판단하세요."]
-
-        function_names: list[str] = []
-        recursive_functions: list[str] = []
-        for_count = 0
-        while_count = 0
-        numeric_list_targets: set[str] = set()
-        list_targets: set[str] = set()
-        matrix_targets: set[str] = set()
-        dict_targets: set[str] = set()
-        stack_candidates: Counter[str] = Counter()
-        queue_candidates: Counter[str] = Counter()
-        sort_candidates: Counter[str] = Counter()
-        tree_cues = 0
-        graph_cues = 0
-        matrix_updates = 0
-
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                function_names.append(node.name)
-                if any(
-                    isinstance(child, ast.Call)
-                    and isinstance(child.func, ast.Name)
-                    and child.func.id == node.name
-                    for child in ast.walk(node)
-                ):
-                    recursive_functions.append(node.name)
-            elif isinstance(node, ast.For):
-                for_count += 1
-            elif isinstance(node, ast.While):
-                while_count += 1
-            elif isinstance(node, ast.Assign):
-                target_names = [target.id for target in node.targets if isinstance(target, ast.Name)]
-                if isinstance(node.value, ast.List):
-                    for target_name in target_names:
-                        list_targets.add(target_name)
-                        if self._is_numeric_sequence(node.value):
-                            numeric_list_targets.add(target_name)
-                        if any(isinstance(item, ast.List) for item in node.value.elts):
-                            matrix_targets.add(target_name)
-                if isinstance(node.value, ast.Dict):
-                    for target_name in target_names:
-                        dict_targets.add(target_name)
-                    tree_cues += self._count_tree_dict_cues(node.value)
-                    graph_cues += self._count_graph_dict_cues(node.value)
-            elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-                if isinstance(node.func.value, ast.Name):
-                    target_name = node.func.value.id
-                    if node.func.attr == "append":
-                        stack_candidates[target_name] += 1
-                        queue_candidates[target_name] += 1
-                    elif node.func.attr == "pop":
-                        stack_candidates[target_name] += 1
-                        if node.args and isinstance(node.args[0], ast.Constant) and node.args[0].value == 0:
-                            queue_candidates[target_name] += 2
-                    elif node.func.attr == "popleft":
-                        queue_candidates[target_name] += 2
-                    elif node.func.attr == "sort":
-                        sort_candidates[target_name] += 2
-                if node.func.attr in {"left", "right"}:
-                    tree_cues += 1
-            elif isinstance(node, ast.Subscript):
-                if isinstance(node.value, ast.Subscript):
-                    matrix_updates += 1
-                elif self._contains_tree_attribute(node):
-                    tree_cues += 1
-
-        cue_lines: list[str] = []
-        cue_lines.append(f"함수 {len(function_names)}개, for {for_count}개, while {while_count}개")
-
-        if recursive_functions:
-            cue_lines.append(f"재귀 함수 후보: {', '.join(sorted(set(recursive_functions)))}")
-        if numeric_list_targets:
-            cue_lines.append(f"숫자 배열 후보: {', '.join(sorted(numeric_list_targets))}")
-        elif list_targets:
-            cue_lines.append(f"리스트 후보: {', '.join(sorted(list_targets))}")
-        if matrix_targets or matrix_updates:
-            matrix_names = ", ".join(sorted(matrix_targets)) if matrix_targets else "미확정"
-            cue_lines.append(f"2차원 표 후보: {matrix_names}, 이중 인덱싱 {matrix_updates}건")
-        if dict_targets:
-            cue_lines.append(f"dict 후보: {', '.join(sorted(dict_targets))}")
-
-        stack_hints = [name for name, count in stack_candidates.items() if count >= 2]
-        queue_hints = [name for name, count in queue_candidates.items() if count >= 2]
-        sort_hints = [name for name, count in sort_candidates.items() if count >= 1]
-
-        if sort_hints:
-            cue_lines.append(f"정렬/재배치 패턴 후보: {', '.join(sorted(sort_hints))}")
-        if stack_hints:
-            cue_lines.append(f"LIFO 패턴 후보: {', '.join(sorted(stack_hints))}")
-        if queue_hints:
-            cue_lines.append(f"FIFO 패턴 후보: {', '.join(sorted(queue_hints))}")
-        if tree_cues:
-            cue_lines.append(f"트리 단서 {tree_cues}건 감지")
-        if graph_cues:
-            cue_lines.append(f"그래프 단서 {graph_cues}건 감지")
-
-        cue_lines.append("템플릿은 알고리즘 이름보다 상태 변화가 가장 잘 드러나는 구조를 우선 선택")
-        return cue_lines
-
-    def _is_numeric_sequence(self, node: ast.List) -> bool:
-        return bool(node.elts) and all(
-            isinstance(item, ast.Constant) and isinstance(item.value, (int, float))
-            for item in node.elts
-        )
-
-    def _count_tree_dict_cues(self, node: ast.Dict) -> int:
-        score = 0
-        keys = [
-            key.value
-            for key in node.keys
-            if isinstance(key, ast.Constant) and isinstance(key.value, str)
-        ]
-        if {"left", "right"} & set(keys):
-            score += 2
-        if "value" in keys:
-            score += 1
-        return score
-
-    def _count_graph_dict_cues(self, node: ast.Dict) -> int:
-        score = 0
-        if any(isinstance(value, ast.List) for value in node.values):
-            score += 1
-        if len(node.keys) >= 2:
-            score += 1
-        return score
-
-    def _contains_tree_attribute(self, node: ast.Subscript) -> bool:
-        value = node.value
-        while isinstance(value, ast.Subscript):
-            value = value.value
-        if isinstance(value, ast.Attribute):
-            return value.attr in {"left", "right"}
-        return False
 
     def _build_response_schema(self) -> dict[str, Any]:
         mode_enum = sorted(self._supported_modes)
