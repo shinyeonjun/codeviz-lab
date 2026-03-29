@@ -28,6 +28,7 @@ export interface ExecutionStudioController {
   stepPrev: () => void;
   stepNext: () => void;
   stepReset: () => void;
+  stepEnd: () => void;
   seekStep: (value: number) => void;
   resetStudio: () => void;
   applyLesson: (lesson: StudioLessonSeed) => void;
@@ -156,6 +157,14 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
     stepReset: () => {
       setIsPlaying(false);
       setStepIndex(0);
+    },
+    stepEnd: () => {
+      if (totalSteps === 0) {
+        return;
+      }
+
+      setIsPlaying(false);
+      setStepIndex(totalSteps - 1);
     },
     seekStep: (value: number) => {
       if (totalSteps === 0) {

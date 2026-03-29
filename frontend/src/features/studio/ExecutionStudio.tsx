@@ -87,6 +87,7 @@ export function ExecutionStudio({
     stepPrev,
     stepNext,
     stepReset,
+    stepEnd,
     resetStudio,
   } = studio;
 
@@ -200,6 +201,7 @@ export function ExecutionStudio({
             onPrev={stepPrev}
             onNext={stepNext}
             onReset={stepReset}
+            onJumpToEnd={stepEnd}
             onSeek={studio.seekStep}
             onPlaybackSpeedChange={studio.setPlaybackSpeed}
           />

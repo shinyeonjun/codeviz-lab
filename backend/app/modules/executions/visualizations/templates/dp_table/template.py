@@ -11,6 +11,7 @@ from app.modules.executions.visualizations.shared.structure_extractors import (
     resolve_active_cells,
     resolve_matched_cells,
     select_primary_name,
+    trim_leading_matrix_padding,
 )
 
 
@@ -38,37 +39,46 @@ class DpTableExecutionTemplate(ExecutionVisualizationTemplate):
         if not extracted_steps:
             return None
 
-        final_matrix = extracted_steps[-1][2]
+        final_matrix, row_headers, col_headers = trim_leading_matrix_padding(extracted_steps[-1][2])
         previous_matrix: list[list[int | float]] | None = None
         step_states: list[ExecutionVisualizationStepRead] = []
-        for step_index, line_number, matrix, locals_snapshot in extracted_steps:
-            active_cells = resolve_active_cells(previous_matrix, matrix)
-            matched_cells = resolve_matched_cells(matrix, final_matrix)
+
+        for step_index, line_number, matrix, merged_snapshot in extracted_steps:
+            normalized_matrix, _, _ = trim_leading_matrix_padding(matrix)
+            active_cells = resolve_active_cells(previous_matrix, normalized_matrix)
+            matched_cells = resolve_matched_cells(normalized_matrix, final_matrix)
+            changed_cells = [
+                f"({row_headers[row]},{col_headers[col]})"
+                for row, col in active_cells[:4]
+                if row < len(row_headers) and col < len(col_headers)
+            ]
+
             step_states.append(
                 ExecutionVisualizationStepRead(
                     step_index=step_index,
                     line_number=line_number,
                     payload={
-                        "matrix": matrix,
+                        "matrix": normalized_matrix,
                         "activeCells": active_cells,
                         "matchedCells": matched_cells,
-                        "rows": len(matrix),
-                        "cols": max((len(row) for row in matrix), default=0),
+                        "rows": len(normalized_matrix),
+                        "cols": max((len(row) for row in normalized_matrix), default=0),
                         "activeCellCount": len(active_cells),
+                        "rowHeaders": row_headers,
+                        "colHeaders": col_headers,
                         "scalarBadges": build_scalar_badges(
-                            locals_snapshot,
+                            merged_snapshot,
                             exclude_names={source_variable},
                         ),
                     },
                     message=(
-                        "변화한 셀: "
-                        + ", ".join(f"({row},{col})" for row, col in active_cells[:4])
-                        if active_cells
+                        "변한 셀: " + ", ".join(changed_cells)
+                        if changed_cells
                         else "현재 DP 테이블 상태를 표시합니다."
                     ),
                 )
             )
-            previous_matrix = matrix
+            previous_matrix = normalized_matrix
 
         return ExecutionVisualizationRead(
             kind="dp-table",
@@ -77,7 +87,7 @@ class DpTableExecutionTemplate(ExecutionVisualizationTemplate):
             metadata={
                 "rows": len(final_matrix),
                 "cols": max((len(row) for row in final_matrix), default=0),
-                "rowHeaders": list(range(len(final_matrix))),
-                "colHeaders": list(range(max((len(row) for row in final_matrix), default=0))),
+                "rowHeaders": row_headers,
+                "colHeaders": col_headers,
             },
         )

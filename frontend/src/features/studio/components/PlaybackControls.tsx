@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Pause, Play, SkipBack } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
 const SPEED_OPTIONS = [
@@ -18,6 +18,7 @@ interface PlaybackControlsProps {
   onPrev: () => void;
   onNext: () => void;
   onReset: () => void;
+  onJumpToEnd: () => void;
   onSeek: (value: number) => void;
   onPlaybackSpeedChange: (value: number) => void;
 }
@@ -32,6 +33,7 @@ export function PlaybackControls({
   onPrev,
   onNext,
   onReset,
+  onJumpToEnd,
   onSeek,
   onPlaybackSpeedChange,
 }: PlaybackControlsProps) {
@@ -62,6 +64,13 @@ export function PlaybackControls({
           </Button>
           <Button variant="outline" onClick={onReset} disabled={!canControl || stepIndex <= 0}>
             <SkipBack size={14} />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onJumpToEnd}
+            disabled={!canControl || totalSteps === 0 || stepIndex >= totalSteps - 1}
+          >
+            <SkipForward size={14} />
           </Button>
           <div className="inline-flex items-center gap-1 rounded-xl bg-surface-soft px-2.5 py-1.5 text-xs text-ink-muted">
             <span>단계 제한</span>

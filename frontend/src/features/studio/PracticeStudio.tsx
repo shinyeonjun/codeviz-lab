@@ -72,6 +72,7 @@ export function PracticeStudio() {
     stepPrev,
     stepNext,
     stepReset,
+    stepEnd,
     resetStudio,
     applyLesson,
   } = studio;
@@ -162,6 +163,7 @@ export function PracticeStudio() {
             onPrev={stepPrev}
             onNext={stepNext}
             onReset={stepReset}
+            onJumpToEnd={stepEnd}
             onSeek={studio.seekStep}
             onPlaybackSpeedChange={studio.setPlaybackSpeed}
           />

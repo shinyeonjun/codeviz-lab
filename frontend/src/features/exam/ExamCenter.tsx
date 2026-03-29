@@ -443,12 +443,13 @@ export function ExamCenter() {
                 totalSteps={studio.totalSteps}
                 playbackSpeed={studio.playbackSpeed}
                 onTogglePlay={studio.togglePlay}
-                onPrev={studio.stepPrev}
-                onNext={studio.stepNext}
-                onReset={studio.stepReset}
-                onSeek={studio.seekStep}
-                onPlaybackSpeedChange={studio.setPlaybackSpeed}
-              />
+            onPrev={studio.stepPrev}
+            onNext={studio.stepNext}
+            onReset={studio.stepReset}
+            onJumpToEnd={studio.stepEnd}
+            onSeek={studio.seekStep}
+            onPlaybackSpeedChange={studio.setPlaybackSpeed}
+          />
 
               <ExecutionErrorPanel requestError={studio.requestError} execution={studio.execution} />
 

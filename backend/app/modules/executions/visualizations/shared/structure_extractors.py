@@ -136,6 +136,47 @@ def build_numeric_matrix_map(locals_snapshot: dict[str, Any]) -> dict[str, list[
     return matrix_map
 
 
+def trim_leading_matrix_padding(
+    matrix: list[list[int | float]],
+) -> tuple[list[list[int | float]], list[int], list[int]]:
+    if not matrix or not matrix[0]:
+        return matrix, list(range(len(matrix))), []
+
+    row_count = len(matrix)
+    col_count = max((len(row) for row in matrix), default=0)
+    if row_count < 2 or col_count < 2:
+        return matrix, list(range(row_count)), list(range(col_count))
+
+    if any(len(row) != col_count for row in matrix):
+        return matrix, list(range(row_count)), list(range(col_count))
+
+    first_row = matrix[0]
+    first_col = [row[0] for row in matrix]
+    row_sentinel = first_row[0]
+    col_sentinel = first_col[0]
+
+    if not all(value == row_sentinel for value in first_row):
+        return matrix, list(range(row_count)), list(range(col_count))
+    if not all(value == col_sentinel for value in first_col):
+        return matrix, list(range(row_count)), list(range(col_count))
+    if row_sentinel != col_sentinel:
+        return matrix, list(range(row_count)), list(range(col_count))
+
+    trimmed_matrix = [row[1:] for row in matrix[1:]]
+    if not trimmed_matrix or not trimmed_matrix[0]:
+        return matrix, list(range(row_count)), list(range(col_count))
+
+    sentinel = row_sentinel
+    has_non_sentinel_value = any(
+        any(cell != sentinel for cell in row)
+        for row in trimmed_matrix
+    )
+    if not has_non_sentinel_value:
+        return matrix, list(range(row_count)), list(range(col_count))
+
+    return trimmed_matrix, list(range(1, row_count)), list(range(1, col_count))
+
+
 def select_primary_name(
     execution: ExecutionRead,
     *,

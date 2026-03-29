@@ -8,6 +8,12 @@ export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
   const activeCells = asCellKeys(state.payload.activeCells);
   const matchedCells = asCellKeys(state.payload.matchedCells);
   const scalarBadges = asScalarBadges(state.payload.scalarBadges);
+  const rowHeaders = Array.isArray(state.payload.rowHeaders)
+    ? state.payload.rowHeaders.map((value) => String(value))
+    : matrix.map((_, rowIndex) => String(rowIndex));
+  const colHeaders = Array.isArray(state.payload.colHeaders)
+    ? state.payload.colHeaders.map((value) => String(value))
+    : (matrix[0] ?? []).map((_, colIndex) => String(colIndex));
   const activeCellLabels = Array.from(activeCells).slice(0, 4);
 
   return (
@@ -25,16 +31,18 @@ export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
       <motion.div layout className="space-y-2">
         {matrix.length > 0 && (
           <div className="flex gap-2 pl-9">
-            {matrix[0].map((_, colIndex) => (
+            {colHeaders.map((header, colIndex) => (
               <div key={`col-${colIndex}`} className="flex h-6 w-12 items-center justify-center text-[11px] text-ink-faint">
-                {colIndex}
+                {header}
               </div>
             ))}
           </div>
         )}
         {matrix.map((row, rowIndex) => (
           <motion.div layout key={`row-${rowIndex}`} className="flex items-center gap-2">
-            <div className="flex h-12 w-7 items-center justify-center text-[11px] text-ink-faint">{rowIndex}</div>
+            <div className="flex h-12 w-7 items-center justify-center text-[11px] text-ink-faint">
+              {rowHeaders[rowIndex] ?? rowIndex}
+            </div>
             {row.map((value, colIndex) => {
               const key = `${rowIndex}:${colIndex}`;
               const isActive = activeCells.has(key);
