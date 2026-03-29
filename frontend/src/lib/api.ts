@@ -3,7 +3,7 @@ import type {
   VisualizationMode,
   VisualizationRequestMode,
 } from '../types/execution';
-import type { AuthSessionState, WorkspaceActivity, Workspace } from '../types/auth';
+import type { AuthSessionState } from '../types/auth';
 import type { ExamCategory, ExamSession, ExamSubmissionResult } from '../types/exam';
 import type { LearningCategory, LearningLesson, LearningLessonSummary } from '../types/learning';
 
@@ -155,14 +155,6 @@ export async function submitExamAnswer(params: {
   return payload.data;
 }
 
-export async function ensureGuestSession(): Promise<AuthSessionState> {
-  const response = await apiFetch('/auth/guest/ensure', {
-    method: 'POST',
-  });
-  const payload = await parseResponse<ApiSuccess<AuthSessionState>>(response);
-  return payload.data;
-}
-
 export async function fetchAuthMe(): Promise<AuthSessionState | null> {
   const response = await apiFetch('/auth/me');
   const payload = await parseResponse<ApiSuccess<AuthSessionState | null>>(response);
@@ -205,40 +197,4 @@ export async function logoutUser(): Promise<void> {
     method: 'POST',
   });
   await parseResponse<ApiSuccess<boolean>>(response);
-}
-
-export async function fetchWorkspaceActivity(): Promise<WorkspaceActivity> {
-  const response = await apiFetch('/auth/activity');
-  const payload = await parseResponse<ApiSuccess<WorkspaceActivity>>(response);
-  return payload.data;
-}
-
-export async function createWorkspace(params: { title: string }): Promise<AuthSessionState> {
-  const response = await apiFetch('/auth/workspaces', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-  const payload = await parseResponse<ApiSuccess<AuthSessionState>>(response);
-  return payload.data;
-}
-
-export async function selectWorkspace(params: { workspaceId: string }): Promise<AuthSessionState> {
-  const response = await apiFetch('/auth/workspaces/select', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-  const payload = await parseResponse<ApiSuccess<AuthSessionState>>(response);
-  return payload.data;
-}
-
-export async function fetchWorkspaces(): Promise<Workspace[]> {
-  const response = await apiFetch('/auth/workspaces');
-  const payload = await parseResponse<ApiSuccess<Workspace[]>>(response);
-  return payload.data;
 }

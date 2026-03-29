@@ -1,5 +1,5 @@
-def test_read_exam_categories(client):
-    response = client.get("/api/v1/exams/categories")
+def test_read_exam_categories(authenticated_client):
+    response = authenticated_client.get("/api/v1/exams/categories")
 
     assert response.status_code == 200
     payload = response.json()
@@ -8,8 +8,8 @@ def test_read_exam_categories(client):
     assert all("questionCount" in category for category in payload["data"])
 
 
-def test_create_exam_session_returns_random_questions_from_category(client):
-    response = client.post(
+def test_create_exam_session_returns_random_questions_from_category(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/exams/sessions",
         json={"categoryId": "algorithms", "questionCount": 2},
     )
@@ -23,8 +23,8 @@ def test_create_exam_session_returns_random_questions_from_category(client):
     assert all(question["categoryId"] == "algorithms" for question in payload["data"]["questions"])
 
 
-def test_create_exam_session_when_category_missing_returns_404(client):
-    response = client.post(
+def test_create_exam_session_when_category_missing_returns_404(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/exams/sessions",
         json={"categoryId": "missing-category", "questionCount": 2},
     )
@@ -33,8 +33,8 @@ def test_create_exam_session_when_category_missing_returns_404(client):
     assert "시험 카테고리를 찾을 수 없습니다" in response.json()["detail"]
 
 
-def test_submit_exam_answer_returns_score_for_correct_code(client):
-    response = client.post(
+def test_submit_exam_answer_returns_score_for_correct_code(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/exams/submissions",
         json={
             "lessonId": "lesson-insertion-sort",
@@ -61,8 +61,8 @@ def test_submit_exam_answer_returns_score_for_correct_code(client):
     assert payload["data"]["passedCount"] == payload["data"]["totalCount"]
 
 
-def test_submit_exam_answer_returns_failed_score_for_wrong_code(client):
-    response = client.post(
+def test_submit_exam_answer_returns_failed_score_for_wrong_code(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/exams/submissions",
         json={
             "lessonId": "lesson-stack",
@@ -83,8 +83,8 @@ def test_submit_exam_answer_returns_failed_score_for_wrong_code(client):
     assert payload["data"]["passedCount"] < payload["data"]["totalCount"]
 
 
-def test_submit_exam_answer_returns_error_for_invalid_code(client):
-    response = client.post(
+def test_submit_exam_answer_returns_error_for_invalid_code(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/exams/submissions",
         json={
             "lessonId": "lesson-variable-flow",
@@ -100,8 +100,8 @@ def test_submit_exam_answer_returns_error_for_invalid_code(client):
     assert payload["data"]["errorMessage"] is not None
 
 
-def test_submit_exam_answer_handles_surrogate_stdout_without_crashing(client):
-    response = client.post(
+def test_submit_exam_answer_handles_surrogate_stdout_without_crashing(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/exams/submissions",
         json={
             "lessonId": "lesson-variable-flow",

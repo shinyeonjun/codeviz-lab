@@ -1,4 +1,4 @@
-def test_create_and_read_execution(client):
+def test_create_and_read_execution(authenticated_client):
     source_code = "\n".join(
         [
             "value = 1",
@@ -7,7 +7,7 @@ def test_create_and_read_execution(client):
         ]
     )
 
-    create_response = client.post(
+    create_response = authenticated_client.post(
         "/api/v1/executions",
         json={"language": "python", "source_code": source_code, "stdin": ""},
     )
@@ -22,7 +22,7 @@ def test_create_and_read_execution(client):
     assert created_payload["data"]["visualization"] is None
 
     run_id = created_payload["data"]["run_id"]
-    read_response = client.get(f"/api/v1/executions/{run_id}")
+    read_response = authenticated_client.get(f"/api/v1/executions/{run_id}")
 
     assert read_response.status_code == 200
     read_payload = read_response.json()
@@ -30,7 +30,7 @@ def test_create_and_read_execution(client):
     assert len(read_payload["data"]["steps"]) >= 2
 
 
-def test_create_execution_with_visualization_mode_returns_visualization_payload(client):
+def test_create_execution_with_visualization_mode_returns_visualization_payload(authenticated_client):
     source_code = "\n".join(
         [
             "numbers = [5, 2, 4, 6, 1, 3]",
@@ -49,7 +49,7 @@ def test_create_execution_with_visualization_mode_returns_visualization_payload(
         ]
     )
 
-    response = client.post(
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -83,8 +83,8 @@ def test_create_execution_with_visualization_mode_returns_visualization_payload(
     )
 
 
-def test_create_execution_accepts_auto_visualization_mode(client):
-    response = client.post(
+def test_create_execution_accepts_auto_visualization_mode(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -100,8 +100,8 @@ def test_create_execution_accepts_auto_visualization_mode(client):
     assert payload["visualization"]["kind"] == "array-bars"
 
 
-def test_create_execution_with_array_bars_handles_user_defined_variable_name(client):
-    response = client.post(
+def test_create_execution_with_array_bars_handles_user_defined_variable_name(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -123,8 +123,8 @@ def test_create_execution_with_array_bars_handles_user_defined_variable_name(cli
     assert payload["visualization"]["sourceVariable"] == "custom_payload"
 
 
-def test_create_execution_with_array_cells_returns_cell_payload(client):
-    response = client.post(
+def test_create_execution_with_array_cells_returns_cell_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -146,8 +146,8 @@ def test_create_execution_with_array_cells_returns_cell_payload(client):
     assert payload["visualization"]["stepStates"][0]["payload"]["items"] == ["A", "B", "C"]
 
 
-def test_create_execution_with_stack_vertical_returns_stack_payload(client):
-    response = client.post(
+def test_create_execution_with_stack_vertical_returns_stack_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -174,8 +174,8 @@ def test_create_execution_with_stack_vertical_returns_stack_payload(client):
     assert any("topValue" in step_state["payload"] for step_state in payload["stepStates"])
 
 
-def test_create_execution_with_queue_horizontal_returns_queue_payload(client):
-    response = client.post(
+def test_create_execution_with_queue_horizontal_returns_queue_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -201,8 +201,8 @@ def test_create_execution_with_queue_horizontal_returns_queue_payload(client):
     assert any("frontValue" in step_state["payload"] for step_state in payload["stepStates"])
 
 
-def test_create_execution_with_call_stack_returns_frame_payload(client):
-    response = client.post(
+def test_create_execution_with_call_stack_returns_frame_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -229,8 +229,8 @@ def test_create_execution_with_call_stack_returns_frame_payload(client):
     )
 
 
-def test_create_execution_with_dp_table_returns_matrix_payload(client):
-    response = client.post(
+def test_create_execution_with_dp_table_returns_matrix_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -255,8 +255,8 @@ def test_create_execution_with_dp_table_returns_matrix_payload(client):
     assert payload["metadata"]["colHeaders"] == [0, 1, 2]
 
 
-def test_create_execution_with_tree_binary_returns_tree_payload(client):
-    response = client.post(
+def test_create_execution_with_tree_binary_returns_tree_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -282,8 +282,8 @@ def test_create_execution_with_tree_binary_returns_tree_payload(client):
     assert payload["metadata"]["leafCount"] >= 2
 
 
-def test_create_execution_with_graph_node_edge_returns_graph_payload(client):
-    response = client.post(
+def test_create_execution_with_graph_node_edge_returns_graph_payload(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -307,14 +307,14 @@ def test_create_execution_with_graph_node_edge_returns_graph_payload(client):
     assert "isolatedNodeCount" in payload["metadata"]
 
 
-def test_read_execution_when_run_id_does_not_exist_returns_404(client):
-    response = client.get("/api/v1/executions/not-found")
+def test_read_execution_when_run_id_does_not_exist_returns_404(authenticated_client):
+    response = authenticated_client.get("/api/v1/executions/not-found")
 
     assert response.status_code == 404
     assert "실행 결과를 찾을 수 없습니다" in response.json()["detail"]
 
 
-def test_create_execution_when_runtime_error_occurs_returns_failed_status(client):
+def test_create_execution_when_runtime_error_occurs_returns_failed_status(authenticated_client):
     source_code = "\n".join(
         [
             "value = 10",
@@ -323,7 +323,7 @@ def test_create_execution_when_runtime_error_occurs_returns_failed_status(client
         ]
     )
 
-    response = client.post(
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={"language": "python", "source_code": source_code, "stdin": ""},
     )
@@ -337,7 +337,7 @@ def test_create_execution_when_runtime_error_occurs_returns_failed_status(client
     assert any(step["event_type"] == "exception" for step in payload["steps"])
 
 
-def test_create_execution_when_timeout_occurs_returns_timeout_status(client):
+def test_create_execution_when_timeout_occurs_returns_timeout_status(authenticated_client):
     source_code = "\n".join(
         [
             "import time",
@@ -346,7 +346,7 @@ def test_create_execution_when_timeout_occurs_returns_timeout_status(client):
         ]
     )
 
-    response = client.post(
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={"language": "python", "source_code": source_code, "stdin": ""},
     )
@@ -359,8 +359,8 @@ def test_create_execution_when_timeout_occurs_returns_timeout_status(client):
     assert payload["step_count"] == 0
 
 
-def test_execution_websocket_returns_snapshot_for_existing_run(client):
-    create_response = client.post(
+def test_execution_websocket_returns_snapshot_for_existing_run(authenticated_client):
+    create_response = authenticated_client.post(
         "/api/v1/executions",
         json={
             "language": "python",
@@ -370,25 +370,25 @@ def test_execution_websocket_returns_snapshot_for_existing_run(client):
     )
     run_id = create_response.json()["data"]["run_id"]
 
-    with client.websocket_connect(f"/api/v1/executions/{run_id}/stream") as websocket:
+    with authenticated_client.websocket_connect(f"/api/v1/executions/{run_id}/stream") as websocket:
         payload = websocket.receive_json()
 
     assert payload["type"] == "execution.snapshot"
     assert payload["data"]["run_id"] == run_id
 
 
-def test_execution_websocket_returns_not_found_for_missing_run(client):
-    with client.websocket_connect("/api/v1/executions/missing-run/stream") as websocket:
+def test_execution_websocket_returns_not_found_for_missing_run(authenticated_client):
+    with authenticated_client.websocket_connect("/api/v1/executions/missing-run/stream") as websocket:
         payload = websocket.receive_json()
 
     assert payload["type"] == "execution.not_found"
     assert payload["run_id"] == "missing-run"
 
 
-def test_create_execution_when_source_code_is_too_large_returns_422(client):
+def test_create_execution_when_source_code_is_too_large_returns_422(authenticated_client):
     source_code = "a" * 20001
 
-    response = client.post(
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={"language": "python", "source_code": source_code, "stdin": ""},
     )
@@ -397,8 +397,8 @@ def test_create_execution_when_source_code_is_too_large_returns_422(client):
     assert response.json()["detail"] == "소스 코드 길이가 허용 범위를 초과했습니다."
 
 
-def test_create_execution_when_stdout_contains_surrogate_returns_sanitized_text(client):
-    response = client.post(
+def test_create_execution_when_stdout_contains_surrogate_returns_sanitized_text(authenticated_client):
+    response = authenticated_client.post(
         "/api/v1/executions",
         json={"language": "python", "source_code": "print('\\udcbe')", "stdin": ""},
     )

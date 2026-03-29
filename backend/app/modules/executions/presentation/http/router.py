@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 
 from app.common.responses import success_response
-from app.modules.auth.application.dependencies import get_optional_auth_context
+from app.modules.auth.application.dependencies import get_required_auth_context
 from app.modules.auth.domain.context import AuthContext
 from app.modules.executions.application.dependencies import get_execution_service
 from app.modules.executions.application.services.execution_service import ExecutionService
@@ -17,12 +17,12 @@ router = APIRouter()
 async def create_execution(
     payload: ExecutionCreate,
     service: ExecutionService = Depends(get_execution_service),
-    auth_context: AuthContext | None = Depends(get_optional_auth_context),
+    auth_context: AuthContext = Depends(get_required_auth_context),
 ) -> dict[str, object]:
     try:
         execution = service.create_execution(
             payload,
-            workspace_id=auth_context.workspace.id if auth_context is not None else None,
+            workspace_id=auth_context.workspace.id,
         )
     except ExecutionInputLimitError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
@@ -36,6 +36,7 @@ async def create_execution(
 @router.get("/{run_id}")
 def read_execution(
     run_id: str,
+    _: AuthContext = Depends(get_required_auth_context),
     service: ExecutionService = Depends(get_execution_service),
 ) -> dict[str, object]:
     try:

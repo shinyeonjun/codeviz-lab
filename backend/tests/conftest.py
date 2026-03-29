@@ -83,3 +83,17 @@ def clean_database():
 def client():
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture()
+def authenticated_client(client: TestClient):
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": f"tester-{uuid4().hex[:8]}@example.com",
+            "password": "password123!",
+            "name": "테스터",
+        },
+    )
+    assert response.status_code == 201
+    return client

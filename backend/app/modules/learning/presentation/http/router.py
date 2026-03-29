@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.common.responses import success_response
+from app.modules.auth.application.dependencies import get_required_auth_context
+from app.modules.auth.domain.context import AuthContext
 from app.modules.learning.application.services.learning_service import (
     LearningService,
     get_learning_service,
@@ -17,6 +19,7 @@ router = APIRouter()
 
 @router.get("/categories")
 def read_learning_categories(
+    _: AuthContext = Depends(get_required_auth_context),
     service: LearningService = Depends(get_learning_service),
 ) -> dict[str, object]:
     categories: list[LearningCategoryRead] = service.get_categories()
@@ -30,6 +33,7 @@ def read_learning_lessons(
     category_id: str | None = Query(default=None, alias="categoryId"),
     visualization_mode: str | None = Query(default=None, alias="visualizationMode"),
     language: str | None = Query(default=None),
+    _: AuthContext = Depends(get_required_auth_context),
     service: LearningService = Depends(get_learning_service),
 ) -> dict[str, object]:
     lessons: list[LearningLessonSummaryRead] = service.get_lessons(
@@ -46,6 +50,7 @@ def read_learning_lessons(
 @router.get("/lessons/{lesson_id}")
 def read_learning_lesson(
     lesson_id: str,
+    _: AuthContext = Depends(get_required_auth_context),
     service: LearningService = Depends(get_learning_service),
 ) -> dict[str, object]:
     try:

@@ -8,6 +8,7 @@ import {
   FileText,
   LayoutGrid,
   Loader2,
+  LogOut,
 } from 'lucide-react';
 import type { LearningGroup } from '../../types/learning';
 
@@ -22,6 +23,9 @@ interface SidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   isLoading: boolean;
+  userName: string;
+  userEmail: string;
+  onLogout: () => void;
 }
 
 export function Sidebar({
@@ -33,6 +37,9 @@ export function Sidebar({
   collapsed,
   onToggleCollapse,
   isLoading,
+  userName,
+  userEmail,
+  onLogout,
 }: SidebarProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
@@ -139,7 +146,21 @@ export function Sidebar({
         </div>
       )}
 
-      <div className="mt-auto px-2 py-3">
+      <div className="mt-auto space-y-2 px-2 py-3">
+        {!collapsed && (
+          <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+            <p className="truncate text-sm font-semibold text-white">{userName}</p>
+            <p className="mt-1 truncate text-xs text-sidebar-muted">{userEmail}</p>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-sidebar-muted transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <LogOut size={13} />
+              로그아웃
+            </button>
+          </div>
+        )}
         <button
           type="button"
           onClick={onToggleCollapse}

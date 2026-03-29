@@ -60,7 +60,7 @@ export function AuthModal({
               {mode === 'login' ? '로그인' : '회원가입'}
             </h3>
             <p className="mt-1 text-xs text-ink-muted">
-              {mode === 'login' ? '기존 작업공간으로 이어서 학습합니다.' : '게스트 작업공간을 계정에 연결합니다.'}
+              {mode === 'login' ? '로그인 후 학습, 스튜디오, 시험을 이용할 수 있습니다.' : '계정을 만들고 학습 기록을 이어서 관리합니다.'}
             </p>
           </div>
           <button

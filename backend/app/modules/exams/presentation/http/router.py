@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.modules.executions.application.dependencies import get_trace_runner
 from app.modules.executions.domain.exceptions import ExecutionInputLimitError
 from app.modules.executions.domain.ports import TraceRunnerProtocol
-from app.modules.auth.application.dependencies import get_optional_auth_context
+from app.modules.auth.application.dependencies import get_required_auth_context
 from app.modules.auth.domain.context import AuthContext
 from app.modules.exams.application.services.exam_grading_service import ExamGradingService
 from app.common.responses import success_response
@@ -45,6 +45,7 @@ def get_exam_attempt_repository(
 
 @router.get("/categories")
 def read_exam_categories(
+    _: AuthContext = Depends(get_required_auth_context),
     service: ExamService = Depends(get_exam_service),
 ) -> dict[str, object]:
     categories: list[ExamCategoryRead] = service.get_categories()
@@ -57,6 +58,7 @@ def read_exam_categories(
 @router.post("/sessions", status_code=201)
 def create_exam_session(
     payload: ExamSessionCreate,
+    _: AuthContext = Depends(get_required_auth_context),
     service: ExamService = Depends(get_exam_service),
 ) -> dict[str, object]:
     try:
@@ -75,7 +77,7 @@ def submit_exam_answer(
     payload: ExamSubmissionCreate,
     service: ExamGradingService = Depends(get_exam_grading_service),
     attempt_repository: ExamAttemptRepository = Depends(get_exam_attempt_repository),
-    auth_context: AuthContext | None = Depends(get_optional_auth_context),
+    auth_context: AuthContext = Depends(get_required_auth_context),
 ) -> dict[str, object]:
     try:
         submission: ExamSubmissionRead = service.grade_submission(
@@ -87,11 +89,10 @@ def submit_exam_answer(
     except (ExamLessonNotFoundError, ExamAssessmentNotConfiguredError) as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
 
-    if auth_context is not None:
-        attempt_repository.save_attempt(
-            workspace_id=auth_context.workspace.id,
-            source_code=payload.source_code,
-            submission=submission,
-        )
+    attempt_repository.save_attempt(
+        workspace_id=auth_context.workspace.id,
+        source_code=payload.source_code,
+        submission=submission,
+    )
 
     return success_response(submission.model_dump(mode="json", by_alias=True))

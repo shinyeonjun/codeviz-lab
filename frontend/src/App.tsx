@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ExamCenter } from './features/exam/ExamCenter';
+import { AuthGate } from './features/auth/AuthGate';
+import { useAuthSession } from './features/auth/useAuthSession';
 import { LearningHome } from './features/home/LearningHome';
 import { Sidebar } from './features/navigation/Sidebar';
 import { ExecutionStudio } from './features/studio/ExecutionStudio';
@@ -25,7 +27,15 @@ function createEmptyLesson(): StudioLessonSeed {
   };
 }
 
-function App() {
+function AuthenticatedAppShell({
+  userName,
+  userEmail,
+  onLogout,
+}: {
+  userName: string;
+  userEmail: string;
+  onLogout: () => void;
+}) {
   const [currentView, setCurrentView] = useState<AppView>('home');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const emptyLesson = useMemo(() => createEmptyLesson(), []);
@@ -73,6 +83,9 @@ function App() {
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         isLoading={isLoading}
+        userName={userName}
+        userEmail={userEmail}
+        onLogout={onLogout}
       />
 
       <main className="flex-1 overflow-y-auto scrollbar-light">
@@ -104,6 +117,49 @@ function App() {
         )}
       </main>
     </div>
+  );
+}
+
+function App() {
+  const {
+    authState,
+    isLoading,
+    isSubmitting,
+    error,
+    clearError,
+    login,
+    register,
+    logout,
+  } = useAuthSession();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-soft text-sm text-ink-muted">
+        인증 상태를 확인하는 중입니다...
+      </div>
+    );
+  }
+
+  if (!authState?.isAuthenticated || !authState.user) {
+    return (
+      <AuthGate
+        isSubmitting={isSubmitting}
+        error={error}
+        onLogin={login}
+        onRegister={register}
+        onClearError={clearError}
+      />
+    );
+  }
+
+  return (
+    <AuthenticatedAppShell
+      userName={authState.user.name}
+      userEmail={authState.user.email}
+      onLogout={() => {
+        void logout();
+      }}
+    />
   );
 }
 

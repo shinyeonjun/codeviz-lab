@@ -3,9 +3,6 @@ from app.modules.auth.presentation.http.schemas import (
     AuthUserRead,
     LoginCreate,
     RegisterCreate,
-    WorkspaceCreate,
-    WorkspaceRead,
-    WorkspaceSelectCreate,
 )
 
 __all__ = [
@@ -13,7 +10,4 @@ __all__ = [
     "AuthUserRead",
     "LoginCreate",
     "RegisterCreate",
-    "WorkspaceCreate",
-    "WorkspaceRead",
-    "WorkspaceSelectCreate",
 ]
