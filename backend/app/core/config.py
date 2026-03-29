@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://codeviz:codeviz@127.0.0.1:55433/codeviz"
     runner_backend: str = "docker"
     runner_timeout_seconds: int = 5
-    runner_c_timeout_seconds: int = 12
+    runner_c_timeout_seconds: int = 20
     runner_docker_image: str = "codeviz-python-sandbox:latest"
     runner_docker_c_image: str = "codeviz-c-sandbox:latest"
     runner_docker_memory_limit: str = "256m"
