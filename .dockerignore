@@ -1,0 +1,13 @@
+.git
+.github
+backend/venv
+backend/.pytest_cache
+backend/__pycache__
+backend/.env
+backend/codeviz.db
+backend/test_codeviz.db
+frontend/node_modules
+frontend/dist
+자료
+_pptx_review
+console-log.txt

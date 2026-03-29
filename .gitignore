@@ -1,0 +1,39 @@
+# 공통
+.git/
+.github/.DS_Store
+.DS_Store
+Thumbs.db
+*.log
+console-log.txt
+
+# Python / backend
+venv/
+.pytest_cache/
+*.db
+backend/venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+backend/codeviz.db
+backend/test_codeviz.db
+backend/.env
+deploy/.env.production
+deploy/.env.production.local
+backend/backend-dev.log
+backend/backend-dev.err.log
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+frontend/.env.local
+frontend/.env.production.local
+
+# 배포/에디터
+.vscode/
+.idea/
+
+# 개인 자료
+자료/
+_pptx_review/

@@ -1,0 +1,2 @@
+from app.modules.learning.application.services.learning_service import LearningService
+from app.modules.learning.application.services.learning_service import get_learning_service

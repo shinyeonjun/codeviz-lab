@@ -1,0 +1,14 @@
+{
+    email {$CADDY_EMAIL}
+}
+
+{$APP_DOMAIN} {
+    encode gzip zstd
+
+    @api path /api/* /docs* /openapi.json
+    reverse_proxy @api backend:8000
+
+    root * /srv
+    try_files {path} /index.html
+    file_server
+}

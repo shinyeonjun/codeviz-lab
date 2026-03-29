@@ -1,0 +1,349 @@
+[
+  {
+    "id": "lesson-lower-bound-search",
+    "title": "lower bound 경계 찾기",
+    "category_id": "algorithms",
+    "description": "정렬된 배열에서 조건을 처음 만족하는 위치를 이진 탐색으로 좁혀 갑니다.",
+    "language": "python",
+    "visualization_mode": "lower-bound-search",
+    "difficulty": "중급",
+    "estimated_minutes": 18,
+    "tags": ["이진 탐색", "lower bound", "배열"],
+    "learning_points": ["정답 후보를 저장하며 탐색하기", "left와 right 경계 줄이기", "처음 만족하는 위치 개념 익히기"],
+    "source_code": "numbers = [1, 2, 2, 2, 4, 5]\ntarget = 2\nleft = 0\nright = len(numbers)\nwhile left < right:\n    mid = (left + right) // 2\n    if numbers[mid] < target:\n        left = mid + 1\n    else:\n        right = mid\nprint(left)",
+    "exercise": {
+      "prompt": "정렬된 리스트에서 target 이상의 값이 처음 나타나는 인덱스를 반환하는 lower_bound 함수를 구현하세요.",
+      "starter_code": "def lower_bound(numbers, target):\n    left = 0\n    right = len(numbers)\n    # lower bound를 구현하세요.\n    return left\n",
+      "checkpoints": ["left < right 조건으로 탐색하기", "mid 계산 후 범위를 절반으로 줄이기", "처음 만족하는 인덱스 반환하기"],
+      "function_name": "lower_bound",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 2, 2, 2, 4, 5], 2], "expected": 1},
+        {"id": "case-2", "args": [[1, 3, 5], 4], "expected": 2}
+      ]
+    }
+  },
+  {
+    "id": "lesson-upper-bound-search",
+    "title": "upper bound 경계 찾기",
+    "category_id": "algorithms",
+    "description": "정렬된 배열에서 target보다 큰 값이 처음 나타나는 위치를 찾습니다.",
+    "language": "python",
+    "visualization_mode": "upper-bound-search",
+    "difficulty": "중급",
+    "estimated_minutes": 18,
+    "tags": ["이진 탐색", "upper bound", "배열"],
+    "learning_points": ["같은 값 구간의 오른쪽 끝 이해", "조건에 따라 경계 이동하기", "right exclusive 구간 감각 익히기"],
+    "source_code": "numbers = [1, 2, 2, 2, 4, 5]\ntarget = 2\nleft = 0\nright = len(numbers)\nwhile left < right:\n    mid = (left + right) // 2\n    if numbers[mid] <= target:\n        left = mid + 1\n    else:\n        right = mid\nprint(left)",
+    "exercise": {
+      "prompt": "정렬된 리스트에서 target보다 큰 값이 처음 나타나는 인덱스를 반환하는 upper_bound 함수를 구현하세요.",
+      "starter_code": "def upper_bound(numbers, target):\n    left = 0\n    right = len(numbers)\n    # upper bound를 구현하세요.\n    return left\n",
+      "checkpoints": ["numbers[mid] <= target 조건 처리하기", "left와 right를 반으로 줄이기", "첫 초과 위치 반환하기"],
+      "function_name": "upper_bound",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 2, 2, 2, 4, 5], 2], "expected": 4},
+        {"id": "case-2", "args": [[1, 3, 5], 5], "expected": 3}
+      ]
+    }
+  },
+  {
+    "id": "lesson-two-pointers-same-direction",
+    "title": "같은 방향 투 포인터",
+    "category_id": "algorithms",
+    "description": "빠른 포인터와 느린 포인터가 같은 방향으로 움직이며 조건을 만족하는 구간을 압축합니다.",
+    "language": "python",
+    "visualization_mode": "two-pointers-same-direction",
+    "difficulty": "중급",
+    "estimated_minutes": 17,
+    "tags": ["투 포인터", "중복 제거", "배열"],
+    "learning_points": ["slow와 fast 역할 구분하기", "조건 만족 시 결과 구간 늘리기", "같은 방향 포인터 이동 감각 익히기"],
+    "source_code": "numbers = [1, 1, 2, 2, 3]\nslow = 0\nfor fast in range(1, len(numbers)):\n    if numbers[fast] != numbers[slow]:\n        slow += 1\n        numbers[slow] = numbers[fast]\nprint(numbers[: slow + 1])",
+    "exercise": {
+      "prompt": "정렬된 리스트의 중복을 제거한 새 리스트를 반환하는 dedupe_sorted 함수를 구현하세요.",
+      "starter_code": "def dedupe_sorted(numbers):\n    if not numbers:\n        return []\n    items = numbers[:]\n    slow = 0\n    # 같은 방향 투 포인터로 중복을 제거하세요.\n    return items[: slow + 1]\n",
+      "checkpoints": ["빈 리스트 처리하기", "slow는 마지막 고유 원소를 가리키기", "새 원소를 만나면 앞으로 복사하기"],
+      "function_name": "dedupe_sorted",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 1, 2, 2, 3]], "expected": [1, 2, 3]},
+        {"id": "case-2", "args": [[4, 4, 4]], "expected": [4]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-sliding-window-fixed",
+    "title": "고정 길이 슬라이딩 윈도우",
+    "category_id": "algorithms",
+    "description": "길이가 고정된 구간이 한 칸씩 이동하며 최대 합을 갱신하는 과정을 봅니다.",
+    "language": "python",
+    "visualization_mode": "sliding-window-fixed",
+    "difficulty": "초급",
+    "estimated_minutes": 16,
+    "tags": ["슬라이딩 윈도우", "고정 길이", "배열"],
+    "learning_points": ["이전 구간 합 재사용하기", "들어오는 값과 나가는 값 구분하기", "최대값 갱신 시점 확인하기"],
+    "source_code": "numbers = [2, 1, 5, 1, 3, 2]\nk = 3\nwindow_sum = sum(numbers[:k])\nbest = window_sum\nfor right in range(k, len(numbers)):\n    window_sum += numbers[right] - numbers[right - k]\n    best = max(best, window_sum)\nprint(best)",
+    "exercise": {
+      "prompt": "길이 k인 연속 부분배열의 최대 합을 반환하는 max_window_sum 함수를 구현하세요.",
+      "starter_code": "def max_window_sum(numbers, k):\n    window_sum = sum(numbers[:k])\n    best = window_sum\n    # 고정 길이 슬라이딩 윈도우를 구현하세요.\n    return best\n",
+      "checkpoints": ["초기 구간 합 계산하기", "새 원소를 더하고 빠지는 원소를 빼기", "최대값 갱신하기"],
+      "function_name": "max_window_sum",
+      "test_cases": [
+        {"id": "case-1", "args": [[2, 1, 5, 1, 3, 2], 3], "expected": 9},
+        {"id": "case-2", "args": [[4, 2, 1, 7], 2], "expected": 8}
+      ]
+    }
+  },
+  {
+    "id": "lesson-palindrome-pointers",
+    "title": "팰린드롬 양끝 비교",
+    "category_id": "basics",
+    "description": "문자열의 양끝 문자를 비교하며 가운데로 좁혀 가는 과정을 셀 단위로 봅니다.",
+    "language": "python",
+    "visualization_mode": "palindrome-pointers",
+    "difficulty": "입문",
+    "estimated_minutes": 14,
+    "tags": ["문자열", "팰린드롬", "투 포인터"],
+    "learning_points": ["왼쪽/오른쪽 포인터 의미 이해", "불일치 시 즉시 종료하기", "가운데까지 비교하기"],
+    "source_code": "text = 'level'\nleft = 0\nright = len(text) - 1\nis_palindrome = True\nwhile left < right:\n    if text[left] != text[right]:\n        is_palindrome = False\n        break\n    left += 1\n    right -= 1\nprint(is_palindrome)",
+    "exercise": {
+      "prompt": "문자열이 팰린드롬이면 True를 반환하는 is_palindrome 함수를 구현하세요.",
+      "starter_code": "def is_palindrome(text):\n    left = 0\n    right = len(text) - 1\n    # 양끝 비교로 팰린드롬을 판별하세요.\n    return True\n",
+      "checkpoints": ["left와 right 초기화하기", "문자가 다르면 False 반환하기", "끝까지 통과하면 True 반환하기"],
+      "function_name": "is_palindrome",
+      "test_cases": [
+        {"id": "case-1", "args": ["level"], "expected": true},
+        {"id": "case-2", "args": ["hello"], "expected": false}
+      ]
+    }
+  },
+  {
+    "id": "lesson-monotonic-stack",
+    "title": "단조 스택으로 다음 큰 수 찾기",
+    "category_id": "algorithms",
+    "description": "스택의 단조성을 유지하며 각 원소의 다음 큰 수를 찾는 과정을 봅니다.",
+    "language": "python",
+    "visualization_mode": "monotonic-stack",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": ["스택", "단조 스택", "배열"],
+    "learning_points": ["스택에 인덱스를 저장하는 이유 이해", "조건 만족 시 여러 원소를 한 번에 처리하기", "결과 배열 갱신 보기"],
+    "source_code": "numbers = [2, 1, 2, 4, 3]\nresult = [-1] * len(numbers)\nstack = []\nfor i, value in enumerate(numbers):\n    while stack and numbers[stack[-1]] < value:\n        previous = stack.pop()\n        result[previous] = value\n    stack.append(i)\nprint(result)",
+    "exercise": {
+      "prompt": "각 원소의 다음 큰 수를 반환하는 next_greater_elements 함수를 구현하세요. 없으면 -1을 넣습니다.",
+      "starter_code": "def next_greater_elements(numbers):\n    result = [-1] * len(numbers)\n    stack = []\n    # 단조 스택을 구현하세요.\n    return result\n",
+      "checkpoints": ["스택에 인덱스 저장하기", "더 큰 값을 만나면 이전 인덱스 처리하기", "처리되지 않은 값은 -1 유지하기"],
+      "function_name": "next_greater_elements",
+      "test_cases": [
+        {"id": "case-1", "args": [[2, 1, 2, 4, 3]], "expected": [4, 2, 4, -1, -1]},
+        {"id": "case-2", "args": [[1, 3, 2]], "expected": [3, -1, -1]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-stack-expression",
+    "title": "괄호 스택 검증",
+    "category_id": "data-structures",
+    "description": "여는 괄호와 닫는 괄호를 스택으로 맞추는 흐름을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "stack-expression",
+    "difficulty": "초급",
+    "estimated_minutes": 15,
+    "tags": ["스택", "괄호 검사", "문자열"],
+    "learning_points": ["여는 괄호 push하기", "닫는 괄호에서 top 확인하기", "모든 괄호가 맞는지 판별하기"],
+    "source_code": "text = '([])'\nstack = []\npairs = {')': '(', ']': '[', '}': '{'}\nvalid = True\nfor char in text:\n    if char in '([{':\n        stack.append(char)\n    else:\n        if not stack or stack.pop() != pairs[char]:\n            valid = False\n            break\nif stack:\n    valid = False\nprint(valid)",
+    "exercise": {
+      "prompt": "괄호 문자열이 올바르면 True를 반환하는 validate_brackets 함수를 구현하세요.",
+      "starter_code": "def validate_brackets(text):\n    stack = []\n    pairs = {')': '(', ']': '[', '}': '{'}\n    # 스택으로 괄호를 검사하세요.\n    return True\n",
+      "checkpoints": ["여는 괄호는 push하기", "닫는 괄호는 짝과 비교하기", "마지막에 stack이 비어야 통과하기"],
+      "function_name": "validate_brackets",
+      "test_cases": [
+        {"id": "case-1", "args": ["([])"], "expected": true},
+        {"id": "case-2", "args": ["([)]"], "expected": false}
+      ]
+    }
+  },
+  {
+    "id": "lesson-memoized-recursion",
+    "title": "메모이제이션 재귀",
+    "category_id": "algorithms",
+    "description": "같은 하위 문제를 다시 계산하지 않도록 캐시를 쓰는 재귀 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "memoized-recursion",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": ["재귀", "메모이제이션", "DP"],
+    "learning_points": ["캐시 hit와 miss 구분하기", "재귀와 저장 구조 연결하기", "중복 호출 줄이기"],
+    "source_code": "memo = {}\n\ndef fib(n):\n    if n in memo:\n        return memo[n]\n    if n <= 1:\n        return n\n    memo[n] = fib(n - 1) + fib(n - 2)\n    return memo[n]\n\nprint(fib(6))",
+    "exercise": {
+      "prompt": "메모이제이션으로 피보나치 수를 구하는 fib 함수를 구현하세요.",
+      "starter_code": "def fib(n, memo=None):\n    if memo is None:\n        memo = {}\n    # 메모이제이션 재귀를 구현하세요.\n    return 0\n",
+      "checkpoints": ["memo 초기화하기", "캐시에 있으면 바로 반환하기", "없으면 재귀 계산 후 저장하기"],
+      "function_name": "fib",
+      "test_cases": [
+        {"id": "case-1", "args": [6], "expected": 8},
+        {"id": "case-2", "args": [1], "expected": 1}
+      ]
+    }
+  },
+  {
+    "id": "lesson-grid-dp",
+    "title": "격자 경로 DP",
+    "category_id": "algorithms",
+    "description": "격자에서 오른쪽과 아래쪽 이동만 허용할 때 경로 수를 테이블로 채웁니다.",
+    "language": "python",
+    "visualization_mode": "grid-dp",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": ["DP", "격자", "경로"],
+    "learning_points": ["격자 DP 기본 상태 만들기", "위와 왼쪽 값을 합쳐 채우기", "테이블 의미를 좌표와 연결하기"],
+    "source_code": "rows = 3\ncols = 3\ndp = [[0] * cols for _ in range(rows)]\nfor r in range(rows):\n    for c in range(cols):\n        if r == 0 or c == 0:\n            dp[r][c] = 1\n        else:\n            dp[r][c] = dp[r - 1][c] + dp[r][c - 1]\nprint(dp)",
+    "exercise": {
+      "prompt": "rows x cols 격자의 경로 수 DP 테이블을 반환하는 build_grid_paths 함수를 구현하세요.",
+      "starter_code": "def build_grid_paths(rows, cols):\n    dp = [[0] * cols for _ in range(rows)]\n    # 격자 경로 DP를 구현하세요.\n    return dp\n",
+      "checkpoints": ["첫 행과 첫 열을 1로 채우기", "나머지는 위 + 왼쪽으로 계산하기", "완성된 테이블 반환하기"],
+      "function_name": "build_grid_paths",
+      "test_cases": [
+        {"id": "case-1", "args": [3, 3], "expected": [[1, 1, 1], [1, 2, 3], [1, 3, 6]]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-tree-bst-search",
+    "title": "BST 탐색 경로 보기",
+    "category_id": "data-structures",
+    "description": "이진 탐색 트리에서 값 크기를 비교하며 왼쪽/오른쪽으로 내려가는 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "tree-bst-search",
+    "difficulty": "초급",
+    "estimated_minutes": 17,
+    "tags": ["트리", "BST", "탐색"],
+    "learning_points": ["BST 정렬 규칙 이해", "현재 노드와 target 비교하기", "왼쪽/오른쪽 분기 선택하기"],
+    "source_code": "tree = {\n    'value': 8,\n    'left': {'value': 3, 'left': None, 'right': None},\n    'right': {'value': 10, 'left': None, 'right': None}\n}\ntarget = 10\nnode = tree\nfound = False\nwhile node is not None:\n    if node['value'] == target:\n        found = True\n        break\n    if target < node['value']:\n        node = node['left']\n    else:\n        node = node['right']\nprint(found)",
+    "exercise": {
+      "prompt": "BST와 target을 받아 값이 존재하면 True를 반환하는 bst_contains 함수를 구현하세요.",
+      "starter_code": "def bst_contains(tree, target):\n    node = tree\n    # BST 탐색을 구현하세요.\n    return False\n",
+      "checkpoints": ["현재 노드가 None인지 확인하기", "값이 같으면 True 반환하기", "작으면 left, 크면 right로 이동하기"],
+      "function_name": "bst_contains",
+      "test_cases": [
+        {"id": "case-1", "args": [{"value": 8, "left": {"value": 3, "left": null, "right": null}, "right": {"value": 10, "left": null, "right": null}}, 10], "expected": true},
+        {"id": "case-2", "args": [{"value": 8, "left": {"value": 3, "left": null, "right": null}, "right": {"value": 10, "left": null, "right": null}}, 6], "expected": false}
+      ]
+    }
+  },
+  {
+    "id": "lesson-tree-bst-insert",
+    "title": "BST 삽입 위치 찾기",
+    "category_id": "data-structures",
+    "description": "새 값을 넣기 위해 적절한 부모 위치를 찾는 BST 삽입 흐름을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "tree-bst-insert",
+    "difficulty": "중급",
+    "estimated_minutes": 19,
+    "tags": ["트리", "BST", "삽입"],
+    "learning_points": ["삽입 전 비교 경로 이해", "부모 노드에서 자식 연결하기", "트리 구조 갱신하기"],
+    "source_code": "tree = {'value': 8, 'left': {'value': 3, 'left': None, 'right': None}, 'right': None}\nvalue = 10\nnode = tree\nwhile True:\n    if value < node['value']:\n        if node['left'] is None:\n            node['left'] = {'value': value, 'left': None, 'right': None}\n            break\n        node = node['left']\n    else:\n        if node['right'] is None:\n            node['right'] = {'value': value, 'left': None, 'right': None}\n            break\n        node = node['right']\nprint(tree)",
+    "exercise": {
+      "prompt": "BST에 새 값을 삽입한 트리를 반환하는 bst_insert 함수를 구현하세요.",
+      "starter_code": "def bst_insert(tree, value):\n    node = tree\n    # BST 삽입을 구현하세요.\n    return tree\n",
+      "checkpoints": ["현재 노드와 삽입값 비교하기", "비어 있는 left/right를 만나면 새 노드 연결하기", "삽입 후 트리 반환하기"],
+      "function_name": "bst_insert",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [{"value": 8, "left": {"value": 3, "left": null, "right": null}, "right": null}, 10],
+          "expected": {"value": 8, "left": {"value": 3, "left": null, "right": null}, "right": {"value": 10, "left": null, "right": null}}
+        }
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph-cycle-detection",
+    "title": "그래프 사이클 감지",
+    "category_id": "algorithms",
+    "description": "방문 중인 노드와 완료된 노드를 구분하며 사이클 여부를 찾는 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "graph-cycle-detection",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": ["그래프", "사이클", "DFS"],
+    "learning_points": ["visiting / visited 상태 구분하기", "재귀 중 다시 만나는 노드 해석하기", "사이클 존재 여부 판별하기"],
+    "source_code": "graph = {'A': ['B'], 'B': ['C'], 'C': ['A']}\nvisiting = []\nvisited = []\n\ndef has_cycle(node):\n    if node in visiting:\n        return True\n    if node in visited:\n        return False\n    visiting.append(node)\n    for neighbor in graph[node]:\n        if has_cycle(neighbor):\n            return True\n    visiting.pop()\n    visited.append(node)\n    return False\n\nprint(has_cycle('A'))",
+    "exercise": {
+      "prompt": "방향 그래프와 시작 노드를 받아 사이클이 있으면 True를 반환하는 has_cycle 함수를 구현하세요.",
+      "starter_code": "def has_cycle(graph, start):\n    visiting = []\n    visited = []\n\n    def dfs(node):\n        # 사이클 감지를 구현하세요.\n        return False\n\n    return dfs(start)\n",
+      "checkpoints": ["현재 방문 중인 노드를 따로 관리하기", "visiting에 다시 들어오면 True 반환하기", "처리 완료 후 visited로 옮기기"],
+      "function_name": "has_cycle",
+      "test_cases": [
+        {"id": "case-1", "args": [{"A": ["B"], "B": ["C"], "C": ["A"]}, "A"], "expected": true},
+        {"id": "case-2", "args": [{"A": ["B"], "B": [], "C": []}, "A"], "expected": false}
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph-bipartite-check",
+    "title": "이분 그래프 판별",
+    "category_id": "algorithms",
+    "description": "노드 색을 번갈아 칠하며 인접 노드 충돌이 있는지 확인합니다.",
+    "language": "python",
+    "visualization_mode": "graph-bipartite-check",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": ["그래프", "이분 그래프", "BFS"],
+    "learning_points": ["노드 색 정보 저장하기", "이웃은 반대 색으로 칠하기", "같은 색 충돌 찾기"],
+    "source_code": "graph = {'A': ['B', 'D'], 'B': ['A', 'C'], 'C': ['B', 'D'], 'D': ['A', 'C']}\ncolor = {'A': 0}\nqueue = ['A']\nvalid = True\nwhile queue:\n    node = queue.pop(0)\n    for neighbor in graph[node]:\n        if neighbor not in color:\n            color[neighbor] = 1 - color[node]\n            queue.append(neighbor)\n        elif color[neighbor] == color[node]:\n            valid = False\n            queue = []\n            break\nprint(valid)",
+    "exercise": {
+      "prompt": "그래프와 시작 노드를 받아 이분 그래프면 True를 반환하는 is_bipartite 함수를 구현하세요.",
+      "starter_code": "def is_bipartite(graph, start):\n    color = {start: 0}\n    queue = [start]\n    # BFS로 이분 그래프를 판별하세요.\n    return True\n",
+      "checkpoints": ["시작 노드에 초기 색 지정하기", "이웃에 반대 색 부여하기", "같은 색 충돌이 나면 False 반환하기"],
+      "function_name": "is_bipartite",
+      "test_cases": [
+        {"id": "case-1", "args": [{"A": ["B", "D"], "B": ["A", "C"], "C": ["B", "D"], "D": ["A", "C"]}, "A"], "expected": true},
+        {"id": "case-2", "args": [{"A": ["B", "C"], "B": ["A", "C"], "C": ["A", "B"]}, "A"], "expected": false}
+      ]
+    }
+  },
+  {
+    "id": "lesson-array-quick-partition",
+    "title": "퀵 정렬 partition 보기",
+    "category_id": "algorithms",
+    "description": "pivot 기준으로 작은 값과 큰 값을 양쪽으로 가르는 partition 과정을 막대로 봅니다.",
+    "language": "python",
+    "visualization_mode": "array-quick-partition",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": ["정렬", "퀵 정렬", "partition"],
+    "learning_points": ["pivot 역할 이해", "작은 값 구간과 큰 값 구간 나누기", "교환 위치 해석하기"],
+    "source_code": "numbers = [8, 4, 7, 3, 5]\npivot = numbers[-1]\nstore = 0\nfor i in range(len(numbers) - 1):\n    if numbers[i] < pivot:\n        numbers[store], numbers[i] = numbers[i], numbers[store]\n        store += 1\nnumbers[store], numbers[-1] = numbers[-1], numbers[store]\nprint(numbers)",
+    "exercise": {
+      "prompt": "마지막 원소를 pivot으로 쓰는 partition_last 함수를 구현하고, partition 이후 리스트를 반환하세요.",
+      "starter_code": "def partition_last(numbers):\n    items = numbers[:]\n    pivot = items[-1]\n    store = 0\n    # partition을 구현하세요.\n    return items\n",
+      "checkpoints": ["pivot보다 작은 값을 앞쪽으로 보내기", "store 인덱스를 관리하기", "마지막에 pivot을 제자리로 옮기기"],
+      "function_name": "partition_last",
+      "test_cases": [
+        {"id": "case-1", "args": [[8, 4, 7, 3, 5]], "expected": [4, 3, 5, 8, 7]},
+        {"id": "case-2", "args": [[3, 2, 1]], "expected": [1, 2, 3]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-array-merge-process",
+    "title": "병합 과정 보기",
+    "category_id": "algorithms",
+    "description": "정렬된 두 배열을 하나로 합치는 merge 과정을 셀 단위로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-merge-process",
+    "difficulty": "중급",
+    "estimated_minutes": 19,
+    "tags": ["정렬", "병합 정렬", "merge"],
+    "learning_points": ["두 포인터 비교 흐름 이해", "작은 값을 결과 배열에 넣기", "남은 원소 처리하기"],
+    "source_code": "left = [1, 4, 7]\nright = [2, 3, 6]\nmerged = []\ni = 0\nj = 0\nwhile i < len(left) and j < len(right):\n    if left[i] <= right[j]:\n        merged.append(left[i])\n        i += 1\n    else:\n        merged.append(right[j])\n        j += 1\nmerged.extend(left[i:])\nmerged.extend(right[j:])\nprint(merged)",
+    "exercise": {
+      "prompt": "정렬된 두 리스트를 병합한 새 리스트를 반환하는 merge_sorted 함수를 구현하세요.",
+      "starter_code": "def merge_sorted(left, right):\n    merged = []\n    i = 0\n    j = 0\n    # merge 과정을 구현하세요.\n    return merged\n",
+      "checkpoints": ["i와 j 포인터 비교하기", "작은 값을 merged에 추가하기", "남은 원소 이어 붙이기"],
+      "function_name": "merge_sorted",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 4, 7], [2, 3, 6]], "expected": [1, 2, 3, 4, 6, 7]},
+        {"id": "case-2", "args": [[1, 2], [3, 4]], "expected": [1, 2, 3, 4]}
+      ]
+    }
+  }
+]

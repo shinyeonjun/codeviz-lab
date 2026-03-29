@@ -1,0 +1,406 @@
+[
+  {
+    "id": "lesson-selection-sort",
+    "title": "선택 정렬 최소값 찾기",
+    "category_id": "algorithms",
+    "description": "현재 구간에서 최소값을 찾아 앞으로 보내는 과정을 배열 막대로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-selection-sort",
+    "difficulty": "초급",
+    "estimated_minutes": 18,
+    "tags": ["정렬", "선택 정렬", "배열"],
+    "learning_points": ["최솟값 인덱스 추적", "교환 시점 이해", "정렬 구간 확장 읽기"],
+    "source_code": "numbers = [7, 3, 5, 2]\nfor i in range(len(numbers)):\n    min_index = i\n    for j in range(i + 1, len(numbers)):\n        if numbers[j] < numbers[min_index]:\n            min_index = j\n    numbers[i], numbers[min_index] = numbers[min_index], numbers[i]\nprint(numbers)",
+    "exercise": {
+      "prompt": "정수 리스트를 받아 선택 정렬한 새 리스트를 반환하는 selection_sort 함수를 구현하세요.",
+      "starter_code": "def selection_sort(numbers):\n    items = numbers[:]\n    # 선택 정렬을 구현하세요.\n    return items\n",
+      "checkpoints": ["최솟값 인덱스 찾기", "앞쪽 원소와 교환하기", "정렬된 리스트 반환하기"],
+      "function_name": "selection_sort",
+      "test_cases": [
+        {"id": "case-1", "args": [[7, 3, 5, 2]], "expected": [2, 3, 5, 7]},
+        {"id": "case-2", "args": [[4, 1, 9]], "expected": [1, 4, 9]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-bubble-sort",
+    "title": "버블 정렬 인접 교환",
+    "category_id": "algorithms",
+    "description": "인접한 두 수를 비교하며 큰 값을 뒤로 보내는 과정을 봅니다.",
+    "language": "python",
+    "visualization_mode": "array-bubble-sort",
+    "difficulty": "초급",
+    "estimated_minutes": 18,
+    "tags": ["정렬", "버블 정렬", "배열"],
+    "learning_points": ["인접 비교 읽기", "교환 발생 위치 확인", "한 번의 패스로 끝나는 구간 이해"],
+    "source_code": "numbers = [5, 1, 4, 2]\nfor end in range(len(numbers) - 1, 0, -1):\n    for i in range(end):\n        if numbers[i] > numbers[i + 1]:\n            numbers[i], numbers[i + 1] = numbers[i + 1], numbers[i]\nprint(numbers)",
+    "exercise": {
+      "prompt": "정수 리스트를 받아 버블 정렬한 새 리스트를 반환하는 bubble_sort 함수를 구현하세요.",
+      "starter_code": "def bubble_sort(numbers):\n    items = numbers[:]\n    # 버블 정렬을 구현하세요.\n    return items\n",
+      "checkpoints": ["바깥 반복으로 정렬 끝 구간 줄이기", "인접 원소 비교하기", "필요할 때 swap하기"],
+      "function_name": "bubble_sort",
+      "test_cases": [
+        {"id": "case-1", "args": [[5, 1, 4, 2]], "expected": [1, 2, 4, 5]},
+        {"id": "case-2", "args": [[3, 2, 1]], "expected": [1, 2, 3]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-binary-search-window",
+    "title": "이진 탐색 구간 줄이기",
+    "category_id": "algorithms",
+    "description": "정렬된 배열에서 low, high, mid가 움직이며 탐색 범위가 줄어드는 모습을 봅니다.",
+    "language": "python",
+    "visualization_mode": "binary-search-window",
+    "difficulty": "초급",
+    "estimated_minutes": 16,
+    "tags": ["이진 탐색", "포인터", "배열"],
+    "learning_points": ["low / high / mid 역할 이해", "탐색 범위 축소 읽기", "조건 분기 해석"],
+    "source_code": "numbers = [1, 3, 5, 7, 9, 11]\ntarget = 7\nlow = 0\nhigh = len(numbers) - 1\nwhile low <= high:\n    mid = (low + high) // 2\n    if numbers[mid] == target:\n        print(mid)\n        break\n    if numbers[mid] < target:\n        low = mid + 1\n    else:\n        high = mid - 1",
+    "exercise": {
+      "prompt": "정렬된 리스트 numbers와 target을 받아 target의 인덱스를 반환하는 binary_search 함수를 구현하세요. 없으면 -1을 반환합니다.",
+      "starter_code": "def binary_search(numbers, target):\n    low = 0\n    high = len(numbers) - 1\n    # 이진 탐색을 구현하세요.\n    return -1\n",
+      "checkpoints": ["mid 계산하기", "찾은 경우 즉시 반환하기", "범위를 절반씩 줄이기"],
+      "function_name": "binary_search",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 3, 5, 7, 9], 7], "expected": 3},
+        {"id": "case-2", "args": [[2, 4, 6, 8], 5], "expected": -1}
+      ]
+    }
+  },
+  {
+    "id": "lesson-two-pointers-opposite",
+    "title": "투 포인터로 합 찾기",
+    "category_id": "algorithms",
+    "description": "배열 양끝에서 포인터가 움직이며 목표 합을 찾는 과정을 셀 단위로 봅니다.",
+    "language": "python",
+    "visualization_mode": "two-pointers-opposite",
+    "difficulty": "초급",
+    "estimated_minutes": 15,
+    "tags": ["투 포인터", "배열", "포인터"],
+    "learning_points": ["양끝 포인터 역할 이해", "조건에 따른 이동 방향 구분", "탐색 종료 조건 읽기"],
+    "source_code": "numbers = [1, 2, 4, 7, 11, 15]\ntarget = 15\nleft = 0\nright = len(numbers) - 1\nwhile left < right:\n    current = numbers[left] + numbers[right]\n    if current == target:\n        print(left, right)\n        break\n    if current < target:\n        left += 1\n    else:\n        right -= 1",
+    "exercise": {
+      "prompt": "정렬된 리스트와 target을 받아 합이 target인 두 인덱스를 반환하는 two_sum_sorted 함수를 구현하세요. 없으면 [-1, -1]을 반환합니다.",
+      "starter_code": "def two_sum_sorted(numbers, target):\n    left = 0\n    right = len(numbers) - 1\n    # 투 포인터로 인덱스 쌍을 찾으세요.\n    return [-1, -1]\n",
+      "checkpoints": ["left와 right 초기화하기", "현재 합 비교하기", "조건에 맞게 포인터 이동하기"],
+      "function_name": "two_sum_sorted",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 2, 4, 7, 11, 15], 15], "expected": [1, 4]},
+        {"id": "case-2", "args": [[2, 3, 5, 8], 10], "expected": [1, 2]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-sliding-window-variable",
+    "title": "슬라이딩 윈도우 길이 조절",
+    "category_id": "algorithms",
+    "description": "윈도우의 시작과 끝이 움직이며 조건을 만족하는 최소 구간을 찾는 과정을 봅니다.",
+    "language": "python",
+    "visualization_mode": "sliding-window-variable",
+    "difficulty": "중급",
+    "estimated_minutes": 18,
+    "tags": ["슬라이딩 윈도우", "배열", "구간 합"],
+    "learning_points": ["윈도우 확장과 축소 이해", "현재 합 유지하기", "최적 해 갱신 시점 읽기"],
+    "source_code": "numbers = [2, 3, 1, 2, 4, 3]\ntarget = 7\nleft = 0\ncurrent_sum = 0\nbest = len(numbers) + 1\nfor right in range(len(numbers)):\n    current_sum += numbers[right]\n    while current_sum >= target:\n        best = min(best, right - left + 1)\n        current_sum -= numbers[left]\n        left += 1\nprint(best)",
+    "exercise": {
+      "prompt": "target 이상이 되는 최소 연속 부분수열 길이를 반환하는 min_subarray_len 함수를 구현하세요. 없으면 0을 반환합니다.",
+      "starter_code": "def min_subarray_len(target, numbers):\n    left = 0\n    current_sum = 0\n    best = len(numbers) + 1\n    # 가변 길이 슬라이딩 윈도우를 구현하세요.\n    return 0\n",
+      "checkpoints": ["오른쪽 끝 확장하기", "조건 만족 시 왼쪽 줄이기", "최소 길이 갱신하기"],
+      "function_name": "min_subarray_len",
+      "test_cases": [
+        {"id": "case-1", "args": [7, [2, 3, 1, 2, 4, 3]], "expected": 2},
+        {"id": "case-2", "args": [11, [1, 2, 3, 4, 5]], "expected": 3}
+      ]
+    }
+  },
+  {
+    "id": "lesson-prefix-sum-array",
+    "title": "누적 합 배열 만들기",
+    "category_id": "basics",
+    "description": "앞에서부터 합을 누적해 새 배열을 채우는 과정을 셀 단위로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "prefix-sum-array",
+    "difficulty": "입문",
+    "estimated_minutes": 14,
+    "tags": ["누적 합", "배열", "기초"],
+    "learning_points": ["누적 규칙 이해", "이전 값 재사용하기", "새 배열 채우기"],
+    "source_code": "numbers = [3, 1, 4, 1]\nprefix = [0] * len(numbers)\nrunning = 0\nfor i in range(len(numbers)):\n    running += numbers[i]\n    prefix[i] = running\nprint(prefix)",
+    "exercise": {
+      "prompt": "정수 리스트 numbers를 받아 같은 길이의 prefix 합 배열을 반환하는 build_prefix_sum 함수를 구현하세요.",
+      "starter_code": "def build_prefix_sum(numbers):\n    prefix = [0] * len(numbers)\n    running = 0\n    # prefix 합 배열을 채우세요.\n    return prefix\n",
+      "checkpoints": ["running 누적값 유지하기", "현재 칸에 누적합 저장하기", "완성된 배열 반환하기"],
+      "function_name": "build_prefix_sum",
+      "test_cases": [
+        {"id": "case-1", "args": [[3, 1, 4, 1]], "expected": [3, 4, 8, 9]},
+        {"id": "case-2", "args": [[2, 2, 2]], "expected": [2, 4, 6]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-recursion-tree",
+    "title": "재귀 호출 트리 보기",
+    "category_id": "basics",
+    "description": "factorial 함수가 재귀로 호출되며 프레임이 쌓이고 돌아오는 과정을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "recursion-tree",
+    "difficulty": "초급",
+    "estimated_minutes": 16,
+    "tags": ["재귀", "호출 스택", "기초"],
+    "learning_points": ["기저 조건 이해", "재귀 호출 깊이 보기", "반환 순서 읽기"],
+    "source_code": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)\n\nprint(factorial(4))",
+    "exercise": {
+      "prompt": "자연수 n을 받아 factorial 값을 반환하는 factorial 함수를 재귀로 구현하세요.",
+      "starter_code": "def factorial(n):\n    # 재귀로 factorial을 구현하세요.\n    return 1\n",
+      "checkpoints": ["기저 조건 만들기", "n-1로 재귀 호출하기", "현재 값과 곱해 반환하기"],
+      "function_name": "factorial",
+      "test_cases": [
+        {"id": "case-1", "args": [4], "expected": 24},
+        {"id": "case-2", "args": [1], "expected": 1}
+      ]
+    }
+  },
+  {
+    "id": "lesson-backtracking-tree",
+    "title": "부분집합 백트래킹",
+    "category_id": "algorithms",
+    "description": "선택/비선택 분기로 재귀가 확장되는 백트래킹 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "backtracking-tree",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": ["백트래킹", "부분집합", "재귀"],
+    "learning_points": ["선택 분기 이해", "재귀 종료 조건 보기", "되돌아가기 흐름 파악"],
+    "source_code": "nums = [1, 2]\nresult = []\n\ndef dfs(index, path):\n    if index == len(nums):\n        result.append(path[:])\n        return\n    path.append(nums[index])\n    dfs(index + 1, path)\n    path.pop()\n    dfs(index + 1, path)\n\ndfs(0, [])\nprint(result)",
+    "exercise": {
+      "prompt": "nums의 모든 부분집합을 반환하는 build_subsets 함수를 재귀로 구현하세요.",
+      "starter_code": "def build_subsets(nums):\n    result = []\n\n    def dfs(index, path):\n        # 부분집합 백트래킹을 구현하세요.\n        return\n\n    dfs(0, [])\n    return result\n",
+      "checkpoints": ["종료 조건에서 결과 저장하기", "선택 분기 호출하기", "path를 되돌리고 비선택 분기 호출하기"],
+      "function_name": "build_subsets",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 2]], "expected": [[1, 2], [1], [2], []]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-divide-and-conquer",
+    "title": "분할 정복 재귀 나누기",
+    "category_id": "algorithms",
+    "description": "구간을 반으로 나누며 재귀 호출이 퍼지는 분할 정복 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "divide-and-conquer",
+    "difficulty": "중급",
+    "estimated_minutes": 17,
+    "tags": ["분할 정복", "재귀", "배열"],
+    "learning_points": ["문제를 반으로 나누기", "기저 조건에서 멈추기", "부분 결과 합치기"],
+    "source_code": "def segment_sum(numbers, left, right):\n    if left == right:\n        return numbers[left]\n    mid = (left + right) // 2\n    return segment_sum(numbers, left, mid) + segment_sum(numbers, mid + 1, right)\n\nnumbers = [1, 2, 3, 4]\nprint(segment_sum(numbers, 0, len(numbers) - 1))",
+    "exercise": {
+      "prompt": "배열 구간 합을 분할 정복으로 계산하는 segment_sum 함수를 구현하세요.",
+      "starter_code": "def segment_sum(numbers, left, right):\n    # 분할 정복으로 구간 합을 계산하세요.\n    return 0\n",
+      "checkpoints": ["left == right에서 반환하기", "mid 계산하기", "왼쪽/오른쪽 결과를 합치기"],
+      "function_name": "segment_sum",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 2, 3, 4], 0, 3], "expected": 10},
+        {"id": "case-2", "args": [[5, 6, 7], 1, 2], "expected": 13}
+      ]
+    }
+  },
+  {
+    "id": "lesson-knapsack-table",
+    "title": "배낭 문제 테이블 채우기",
+    "category_id": "algorithms",
+    "description": "무게와 가치에 따라 DP 테이블을 채우는 과정을 셀 단위로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "knapsack-table",
+    "difficulty": "중급",
+    "estimated_minutes": 24,
+    "tags": ["DP", "배낭 문제", "테이블"],
+    "learning_points": ["상태를 행/열로 정의하기", "선택/비선택 점화식 이해", "최적값 읽기"],
+    "source_code": "weights = [1, 2, 3]\nvalues = [6, 10, 12]\ncapacity = 5\ndp = [[0] * (capacity + 1) for _ in range(len(weights) + 1)]\nfor i in range(1, len(weights) + 1):\n    for w in range(capacity + 1):\n        dp[i][w] = dp[i - 1][w]\n        if weights[i - 1] <= w:\n            dp[i][w] = max(dp[i][w], dp[i - 1][w - weights[i - 1]] + values[i - 1])\nprint(dp)",
+    "exercise": {
+      "prompt": "0/1 배낭 문제의 DP 테이블을 반환하는 build_knapsack_table 함수를 구현하세요.",
+      "starter_code": "def build_knapsack_table(weights, values, capacity):\n    dp = [[0] * (capacity + 1) for _ in range(len(weights) + 1)]\n    # DP 테이블을 채우세요.\n    return dp\n",
+      "checkpoints": ["행은 물건 개수, 열은 무게로 잡기", "기본값은 이전 행 값으로 두기", "담을 수 있으면 max 비교하기"],
+      "function_name": "build_knapsack_table",
+      "test_cases": [
+        {"id": "case-1", "args": [[1, 2, 3], [6, 10, 12], 5], "expected": [[0, 0, 0, 0, 0, 0], [0, 6, 6, 6, 6, 6], [0, 6, 10, 16, 16, 16], [0, 6, 10, 16, 18, 22]]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-lcs-table",
+    "title": "LCS 테이블 채우기",
+    "category_id": "algorithms",
+    "description": "두 문자열의 최장 공통 부분수열 길이를 구하는 DP 테이블을 채웁니다.",
+    "language": "python",
+    "visualization_mode": "lcs-table",
+    "difficulty": "중급",
+    "estimated_minutes": 24,
+    "tags": ["DP", "LCS", "문자열"],
+    "learning_points": ["문자 비교에 따라 점화식 나누기", "대각/위/왼쪽 참조 이해", "테이블에서 답 찾기"],
+    "source_code": "a = 'ABC'\nb = 'AC'\ndp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\nfor i in range(1, len(a) + 1):\n    for j in range(1, len(b) + 1):\n        if a[i - 1] == b[j - 1]:\n            dp[i][j] = dp[i - 1][j - 1] + 1\n        else:\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\nprint(dp)",
+    "exercise": {
+      "prompt": "두 문자열의 LCS 길이 테이블을 반환하는 build_lcs_table 함수를 구현하세요.",
+      "starter_code": "def build_lcs_table(a, b):\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    # LCS 테이블을 채우세요.\n    return dp\n",
+      "checkpoints": ["문자가 같으면 대각선+1", "다르면 위/왼쪽 중 큰 값", "완성된 테이블 반환하기"],
+      "function_name": "build_lcs_table",
+      "test_cases": [
+        {"id": "case-1", "args": ["ABC", "AC"], "expected": [[0, 0, 0], [0, 1, 1], [0, 1, 1], [0, 1, 2]]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-edit-distance-table",
+    "title": "편집 거리 테이블 보기",
+    "category_id": "algorithms",
+    "description": "삽입, 삭제, 교체 연산으로 편집 거리를 구하는 DP 테이블을 채웁니다.",
+    "language": "python",
+    "visualization_mode": "edit-distance-table",
+    "difficulty": "중급",
+    "estimated_minutes": 25,
+    "tags": ["DP", "편집 거리", "문자열"],
+    "learning_points": ["기본 행/열 초기화", "연산 3가지 비교", "최소 비용 누적 읽기"],
+    "source_code": "a = 'cat'\nb = 'cut'\ndp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\nfor i in range(len(a) + 1):\n    dp[i][0] = i\nfor j in range(len(b) + 1):\n    dp[0][j] = j\nfor i in range(1, len(a) + 1):\n    for j in range(1, len(b) + 1):\n        if a[i - 1] == b[j - 1]:\n            dp[i][j] = dp[i - 1][j - 1]\n        else:\n            dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])\nprint(dp)",
+    "exercise": {
+      "prompt": "두 문자열의 편집 거리 DP 테이블을 반환하는 build_edit_distance_table 함수를 구현하세요.",
+      "starter_code": "def build_edit_distance_table(a, b):\n    dp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\n    # 편집 거리 테이블을 채우세요.\n    return dp\n",
+      "checkpoints": ["첫 행/열 초기화하기", "문자가 같으면 대각선 값 유지", "다르면 세 방향 최소값+1 적용하기"],
+      "function_name": "build_edit_distance_table",
+      "test_cases": [
+        {"id": "case-1", "args": ["cat", "cut"], "expected": [[0, 1, 2, 3], [1, 0, 1, 2], [2, 1, 1, 2], [3, 2, 2, 1]]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-tree-level-order",
+    "title": "트리 레벨 순회 보기",
+    "category_id": "data-structures",
+    "description": "큐를 사용해 같은 깊이의 노드를 차례대로 방문하는 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "tree-level-order",
+    "difficulty": "초급",
+    "estimated_minutes": 18,
+    "tags": ["트리", "레벨 순회", "큐"],
+    "learning_points": ["루트부터 레벨별로 방문하기", "큐에 자식 넣기", "트리 구조와 방문 흐름 연결하기"],
+    "source_code": "tree = {\n    'value': 10,\n    'left': {'value': 5, 'left': None, 'right': None},\n    'right': {'value': 15, 'left': None, 'right': None}\n}\nqueue = [tree]\norder = []\nwhile queue:\n    node = queue.pop(0)\n    order.append(node['value'])\n    if node['left'] is not None:\n        queue.append(node['left'])\n    if node['right'] is not None:\n        queue.append(node['right'])\nprint(order)",
+    "exercise": {
+      "prompt": "예제와 같은 이진 트리를 레벨 순회해 방문 값을 반환하는 level_order_values 함수를 구현하세요.",
+      "starter_code": "def level_order_values(tree):\n    queue = [tree]\n    order = []\n    # 레벨 순회를 구현하세요.\n    return order\n",
+      "checkpoints": ["queue에서 앞 원소 꺼내기", "현재 노드 값 저장하기", "left/right 자식을 차례대로 넣기"],
+      "function_name": "level_order_values",
+      "test_cases": [
+        {"id": "case-1", "args": [{"value": 10, "left": {"value": 5, "left": null, "right": null}, "right": {"value": 15, "left": null, "right": null}}], "expected": [10, 5, 15]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph-bfs-traversal",
+    "title": "그래프 BFS 순회",
+    "category_id": "algorithms",
+    "description": "큐를 사용해 가까운 노드부터 넓게 퍼져 나가는 BFS 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "graph-bfs-traversal",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": ["그래프", "BFS", "큐"],
+    "learning_points": ["frontier 개념 이해", "visited 갱신 시점 파악", "너비 우선 순서 읽기"],
+    "source_code": "graph = {'A': ['B', 'C'], 'B': ['D'], 'C': ['E'], 'D': [], 'E': []}\nqueue = ['A']\nvisited = []\nwhile queue:\n    node = queue.pop(0)\n    if node not in visited:\n        visited.append(node)\n        for neighbor in graph[node]:\n            queue.append(neighbor)\nprint(visited)",
+    "exercise": {
+      "prompt": "그래프와 시작 노드를 받아 BFS 방문 순서를 반환하는 bfs_order 함수를 구현하세요.",
+      "starter_code": "def bfs_order(graph, start):\n    queue = [start]\n    visited = []\n    # BFS를 구현하세요.\n    return visited\n",
+      "checkpoints": ["queue에서 앞 노드 꺼내기", "처음 본 노드만 visited에 넣기", "인접 노드를 queue에 추가하기"],
+      "function_name": "bfs_order",
+      "test_cases": [
+        {"id": "case-1", "args": [{"A": ["B", "C"], "B": ["D"], "C": ["E"], "D": [], "E": []}, "A"], "expected": ["A", "B", "C", "D", "E"]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph-dfs-traversal",
+    "title": "그래프 DFS 순회",
+    "category_id": "algorithms",
+    "description": "한 방향으로 깊게 탐색하다가 되돌아오는 DFS 흐름을 그래프로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "graph-dfs-traversal",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": ["그래프", "DFS", "재귀"],
+    "learning_points": ["깊게 들어가는 순서 이해", "visited 체크 시점 보기", "되돌아오기 흐름 읽기"],
+    "source_code": "graph = {'A': ['B', 'C'], 'B': ['D'], 'C': ['E'], 'D': [], 'E': []}\nvisited = []\n\ndef dfs(node):\n    if node in visited:\n        return\n    visited.append(node)\n    for neighbor in graph[node]:\n        dfs(neighbor)\n\ndfs('A')\nprint(visited)",
+    "exercise": {
+      "prompt": "그래프와 시작 노드를 받아 DFS 방문 순서를 반환하는 dfs_order 함수를 구현하세요.",
+      "starter_code": "def dfs_order(graph, start):\n    visited = []\n\n    def dfs(node):\n        # DFS를 구현하세요.\n        return\n\n    dfs(start)\n    return visited\n",
+      "checkpoints": ["재귀 함수 안에서 visited 확인하기", "현재 노드 방문 처리하기", "이웃 노드로 재귀 호출하기"],
+      "function_name": "dfs_order",
+      "test_cases": [
+        {"id": "case-1", "args": [{"A": ["B", "C"], "B": ["D"], "C": ["E"], "D": [], "E": []}, "A"], "expected": ["A", "B", "D", "C", "E"]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph-topological-sort",
+    "title": "위상 정렬 흐름 보기",
+    "category_id": "algorithms",
+    "description": "진입 차수가 0인 노드를 차례로 꺼내며 순서를 만드는 위상 정렬을 봅니다.",
+    "language": "python",
+    "visualization_mode": "graph-topological-sort",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": ["그래프", "위상 정렬", "진입 차수"],
+    "learning_points": ["indegree 의미 이해", "진입 차수 0 노드 선택하기", "정렬 순서 만들기"],
+    "source_code": "graph = {'A': ['C'], 'B': ['C'], 'C': ['D'], 'D': []}\nindegree = {'A': 0, 'B': 0, 'C': 2, 'D': 1}\nqueue = ['A', 'B']\norder = []\nwhile queue:\n    node = queue.pop(0)\n    order.append(node)\n    for neighbor in graph[node]:\n        indegree[neighbor] -= 1\n        if indegree[neighbor] == 0:\n            queue.append(neighbor)\nprint(order)",
+    "exercise": {
+      "prompt": "그래프와 indegree 정보를 받아 위상 정렬 결과를 반환하는 topological_order 함수를 구현하세요.",
+      "starter_code": "def topological_order(graph, indegree):\n    queue = [node for node, count in indegree.items() if count == 0]\n    order = []\n    # 위상 정렬을 구현하세요.\n    return order\n",
+      "checkpoints": ["indegree 0 노드로 시작하기", "현재 노드를 결과에 추가하기", "이웃의 indegree를 줄이고 0이면 queue에 넣기"],
+      "function_name": "topological_order",
+      "test_cases": [
+        {"id": "case-1", "args": [{"A": ["C"], "B": ["C"], "C": ["D"], "D": []}, {"A": 0, "B": 0, "C": 2, "D": 1}], "expected": ["A", "B", "C", "D"]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph-connected-components",
+    "title": "연결 요소 나누기",
+    "category_id": "algorithms",
+    "description": "그래프에서 방문되지 않은 노드마다 새로운 연결 요소를 찾는 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "graph-connected-components",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": ["그래프", "연결 요소", "DFS"],
+    "learning_points": ["방문되지 않은 시작점 찾기", "한 컴포넌트씩 확장하기", "컴포넌트 개수 세기"],
+    "source_code": "graph = {'A': ['B'], 'B': ['A'], 'C': ['D'], 'D': ['C']}\nvisited = []\ncomponents = 0\n\ndef dfs(node):\n    if node in visited:\n        return\n    visited.append(node)\n    for neighbor in graph[node]:\n        dfs(neighbor)\n\nfor node in graph:\n    if node not in visited:\n        components += 1\n        dfs(node)\nprint(components)",
+    "exercise": {
+      "prompt": "무방향 그래프의 연결 요소 개수를 반환하는 count_components 함수를 구현하세요.",
+      "starter_code": "def count_components(graph):\n    visited = []\n    components = 0\n\n    def dfs(node):\n        # DFS를 구현하세요.\n        return\n\n    # 모든 노드를 순회하며 컴포넌트 개수를 세세요.\n    return components\n",
+      "checkpoints": ["방문하지 않은 노드에서 새 컴포넌트 시작하기", "DFS로 같은 컴포넌트 방문 처리하기", "컴포넌트 수 반환하기"],
+      "function_name": "count_components",
+      "test_cases": [
+        {"id": "case-1", "args": [{"A": ["B"], "B": ["A"], "C": ["D"], "D": ["C"]}], "expected": 2}
+      ]
+    }
+  },
+  {
+    "id": "lesson-deque-both-ends",
+    "title": "덱 양끝 연산 보기",
+    "category_id": "data-structures",
+    "description": "앞뒤 양쪽에서 값을 넣고 빼는 덱의 상태 변화를 확인합니다.",
+    "language": "python",
+    "visualization_mode": "deque-both-ends",
+    "difficulty": "초급",
+    "estimated_minutes": 15,
+    "tags": ["덱", "큐", "자료구조"],
+    "learning_points": ["앞/뒤 삽입 차이 이해", "앞/뒤 삭제 차이 이해", "양끝 자료구조 상태 읽기"],
+    "source_code": "dq = [2, 3]\ndq.insert(0, 1)\ndq.append(4)\ndq.pop(0)\nprint(dq)",
+    "exercise": {
+      "prompt": "덱에 앞쪽으로 1을 넣고 뒤쪽으로 4를 넣은 뒤 앞에서 하나 제거해 최종 리스트를 반환하는 build_deque 함수를 구현하세요.",
+      "starter_code": "def build_deque():\n    dq = [2, 3]\n    # 앞/뒤 연산을 적용한 뒤 최종 덱을 반환하세요.\n    return dq\n",
+      "checkpoints": ["insert(0, value)로 앞에 넣기", "append로 뒤에 넣기", "pop(0)으로 앞에서 제거하기"],
+      "function_name": "build_deque",
+      "test_cases": [
+        {"id": "case-1", "args": [], "expected": [2, 3, 4]}
+      ]
+    }
+  }
+]

@@ -1,0 +1,216 @@
+[
+  {
+    "id": "lesson-variable-flow",
+    "title": "변수 흐름 따라가기",
+    "category_id": "basics",
+    "description": "대입과 산술 연산이 실행될 때 변수 값이 어떻게 바뀌는지 추적합니다.",
+    "language": "python",
+    "visualization_mode": "none",
+    "difficulty": "입문",
+    "estimated_minutes": 10,
+    "tags": ["변수", "대입", "기초 문법"],
+    "learning_points": ["변수 재할당 이해", "실행 순서 이해", "출력 결과 예측"],
+    "source_code": "value = 2\nvalue = value + 5\nvalue = value * 2\nprint(value)",
+    "exercise": {
+      "prompt": "정수 value를 받아 5를 더한 뒤 2배한 값을 반환하는 transform_value 함수를 구현하세요.",
+      "starter_code": "def transform_value(value):\n    # value에 5를 더한 뒤 2배한 값을 반환하세요.\n    return 0\n",
+      "checkpoints": ["함수 정의하기", "연산 순서 지키기", "최종 값을 return으로 반환하기"],
+      "function_name": "transform_value",
+      "test_cases": [
+        {"id": "case-1", "args": [2], "expected": 14},
+        {"id": "case-2", "args": [0], "expected": 10},
+        {"id": "case-3", "args": [-3], "expected": 4}
+      ]
+    }
+  },
+  {
+    "id": "lesson-array-cells",
+    "title": "배열 원소 바꾸기",
+    "category_id": "basics",
+    "description": "리스트 원소가 한 칸씩 바뀔 때 어떤 위치가 변하는지 셀 단위로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 12,
+    "tags": ["리스트", "인덱스", "배열"],
+    "learning_points": ["인덱스 접근 이해", "원소 교체 과정 이해", "배열 상태 변화 확인"],
+    "source_code": "tokens = ['A', 'B', 'C', 'D']\ntokens[1] = 'X'\ntokens[2] = 'Y'\nprint(tokens)",
+    "exercise": {
+      "prompt": "문자열 리스트 tokens를 받아 인덱스 1을 'X', 인덱스 2를 'Y'로 바꾼 새 리스트를 반환하는 replace_tokens 함수를 구현하세요.",
+      "starter_code": "def replace_tokens(tokens):\n    updated = tokens[:]\n    # 인덱스 1과 2를 각각 'X', 'Y'로 바꿔 반환하세요.\n    return updated\n",
+      "checkpoints": ["리스트를 복사해서 사용하기", "인덱스 1과 2 바꾸기", "변경된 리스트 반환하기"],
+      "function_name": "replace_tokens",
+      "test_cases": [
+        {"id": "case-1", "args": [["A", "B", "C", "D"]], "expected": ["A", "X", "Y", "D"]},
+        {"id": "case-2", "args": [["K", "L", "M", "N"]], "expected": ["K", "X", "Y", "N"]},
+        {"id": "case-3", "args": [["H", "I", "J"]], "expected": ["H", "X", "Y"]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-call-stack",
+    "title": "함수 호출 스택 보기",
+    "category_id": "basics",
+    "description": "함수 안에서 또 다른 함수를 호출할 때 스택이 어떻게 쌓이는지 봅니다.",
+    "language": "python",
+    "visualization_mode": "call-stack",
+    "difficulty": "초급",
+    "estimated_minutes": 15,
+    "tags": ["함수", "호출 스택", "반환값"],
+    "learning_points": ["함수 호출 흐름 이해", "반환 시점 이해", "스택 프레임 개념 익히기"],
+    "source_code": "def add_one(value):\n    return value + 1\n\ndef wrap(value):\n    return add_one(value)\n\nresult = wrap(3)\nprint(result)",
+    "exercise": {
+      "prompt": "add_one 함수가 1을 더해 반환하도록 두고, wrap 함수가 add_one을 호출해 결과를 반환하도록 구현하세요.",
+      "starter_code": "def add_one(value):\n    return value + 1\n\n\ndef wrap(value):\n    # add_one을 호출한 결과를 반환하세요.\n    return value\n",
+      "checkpoints": ["보조 함수 add_one 유지하기", "wrap에서 add_one 호출하기", "호출 결과 그대로 반환하기"],
+      "function_name": "wrap",
+      "test_cases": [
+        {"id": "case-1", "args": [3], "expected": 4},
+        {"id": "case-2", "args": [10], "expected": 11},
+        {"id": "case-3", "args": [-1], "expected": 0}
+      ]
+    }
+  },
+  {
+    "id": "lesson-insertion-sort",
+    "title": "삽입 정렬 상태 변화",
+    "category_id": "algorithms",
+    "description": "숫자 배열이 정렬되는 과정을 막대 그래프로 추적합니다.",
+    "language": "python",
+    "visualization_mode": "array-bars",
+    "difficulty": "초급",
+    "estimated_minutes": 20,
+    "tags": ["정렬", "삽입 정렬", "배열"],
+    "learning_points": ["삽입 정렬 핵심 원리 이해", "비교와 이동 구간 확인", "정렬 완료 상태 해석"],
+    "source_code": "numbers = [5, 2, 4, 6, 1, 3]\n\nfor i in range(1, len(numbers)):\n    key = numbers[i]\n    j = i - 1\n\n    while j >= 0 and numbers[j] > key:\n        numbers[j + 1] = numbers[j]\n        j -= 1\n\n    numbers[j + 1] = key\n\nprint(numbers)",
+    "exercise": {
+      "prompt": "정수 리스트 numbers를 받아 삽입 정렬한 새 리스트를 반환하는 insertion_sort 함수를 구현하세요.",
+      "starter_code": "def insertion_sort(numbers):\n    items = numbers[:]\n    # 삽입 정렬을 구현하고 정렬된 리스트를 반환하세요.\n    return items\n",
+      "checkpoints": ["입력 리스트를 복사해서 사용하기", "앞쪽 정렬 구간에 삽입하기", "정렬이 끝난 리스트 반환하기"],
+      "function_name": "insertion_sort",
+      "test_cases": [
+        {"id": "case-1", "args": [[5, 2, 4, 6, 1, 3]], "expected": [1, 2, 3, 4, 5, 6]},
+        {"id": "case-2", "args": [[3, 1, 2]], "expected": [1, 2, 3]},
+        {"id": "case-3", "args": [[9, 7, 5, 3]], "expected": [3, 5, 7, 9]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-dp-table",
+    "title": "DP 테이블 채우기",
+    "category_id": "algorithms",
+    "description": "2차원 DP 테이블이 채워지는 과정을 셀 단위로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "dp-table",
+    "difficulty": "중급",
+    "estimated_minutes": 25,
+    "tags": ["DP", "테이블", "점화식"],
+    "learning_points": ["DP 상태 정의 감각 익히기", "테이블 갱신 순서 파악", "활성 셀 읽기"],
+    "source_code": "dp = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]\ndp[0][0] = 1\ndp[0][1] = 1\ndp[1][1] = dp[0][1] + 1\ndp[1][2] = dp[1][1] + 1\ndp[2][2] = dp[1][2] + 1\nprint(dp)",
+    "exercise": {
+      "prompt": "3x3 DP 테이블을 만들고 예제와 같은 순서로 값을 채운 뒤 최종 테이블을 반환하는 build_dp_table 함수를 구현하세요.",
+      "starter_code": "def build_dp_table():\n    dp = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]\n    # 예제와 같은 규칙으로 dp 값을 채우세요.\n    return dp\n",
+      "checkpoints": ["3x3 테이블 생성하기", "점화식을 이용해 셀 채우기", "최종 테이블 반환하기"],
+      "function_name": "build_dp_table",
+      "test_cases": [
+        {"id": "case-1", "args": [], "expected": [[1, 1, 0], [0, 2, 3], [0, 0, 4]]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-stack",
+    "title": "스택 push / pop",
+    "category_id": "data-structures",
+    "description": "스택에 데이터가 쌓이고 빠지는 과정을 세로 방향으로 봅니다.",
+    "language": "python",
+    "visualization_mode": "stack-vertical",
+    "difficulty": "입문",
+    "estimated_minutes": 12,
+    "tags": ["스택", "LIFO", "자료구조"],
+    "learning_points": ["LIFO 이해", "top 개념 이해", "push / pop 차이 파악"],
+    "source_code": "stack = []\nstack.append(1)\nstack.append(2)\nstack.append(3)\nstack.pop()\nprint(stack)",
+    "exercise": {
+      "prompt": "빈 스택에 1, 2, 3을 차례로 push한 뒤 한 번 pop하고, 최종 스택을 반환하는 build_stack 함수를 구현하세요.",
+      "starter_code": "def build_stack():\n    stack = []\n    # push와 pop을 순서대로 수행한 뒤 최종 stack을 반환하세요.\n    return stack\n",
+      "checkpoints": ["append로 push하기", "pop으로 top 제거하기", "최종 스택 반환하기"],
+      "function_name": "build_stack",
+      "test_cases": [
+        {"id": "case-1", "args": [], "expected": [1, 2]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-queue",
+    "title": "큐 enqueue / dequeue",
+    "category_id": "data-structures",
+    "description": "큐의 앞과 뒤가 어떻게 움직이는지 가로 방향으로 봅니다.",
+    "language": "python",
+    "visualization_mode": "queue-horizontal",
+    "difficulty": "입문",
+    "estimated_minutes": 12,
+    "tags": ["큐", "FIFO", "자료구조"],
+    "learning_points": ["FIFO 이해", "front / rear 개념 이해", "삽입과 삭제 위치 구분"],
+    "source_code": "queue = [1]\nqueue.append(2)\nqueue.append(3)\nqueue.pop(0)\nprint(queue)",
+    "exercise": {
+      "prompt": "큐에 1이 들어 있는 상태에서 2와 3을 enqueue하고 한 번 dequeue한 뒤, 최종 큐를 반환하는 build_queue 함수를 구현하세요.",
+      "starter_code": "def build_queue():\n    queue = [1]\n    # enqueue와 dequeue를 순서대로 수행한 뒤 최종 queue를 반환하세요.\n    return queue\n",
+      "checkpoints": ["append로 rear에 삽입하기", "pop(0)으로 front 제거하기", "최종 큐 반환하기"],
+      "function_name": "build_queue",
+      "test_cases": [
+        {"id": "case-1", "args": [], "expected": [2, 3]}
+      ]
+    }
+  },
+  {
+    "id": "lesson-tree",
+    "title": "이진 트리 구조 읽기",
+    "category_id": "data-structures",
+    "description": "중첩 딕셔너리로 표현한 트리를 노드와 간선 형태로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "tree-binary",
+    "difficulty": "초급",
+    "estimated_minutes": 18,
+    "tags": ["트리", "이진 트리", "노드"],
+    "learning_points": ["부모-자식 관계 이해", "left / right 구조 읽기", "트리 노드 시각화 해석"],
+    "source_code": "tree = {\n    'value': 10,\n    'left': {'value': 5, 'left': None, 'right': None},\n    'right': {'value': 15, 'left': None, 'right': None},\n}\nprint(tree['value'])",
+    "exercise": {
+      "prompt": "루트 값이 10이고, 왼쪽 자식이 5, 오른쪽 자식이 15인 이진 트리를 중첩 딕셔너리로 만들어 반환하는 build_tree 함수를 구현하세요.",
+      "starter_code": "def build_tree():\n    # left와 right를 가진 이진 트리를 딕셔너리로 만들어 반환하세요.\n    return {}\n",
+      "checkpoints": ["루트 노드 만들기", "left와 right 자식 연결하기", "트리 전체 딕셔너리 반환하기"],
+      "function_name": "build_tree",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": {
+            "value": 10,
+            "left": {"value": 5, "left": null, "right": null},
+            "right": {"value": 15, "left": null, "right": null}
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "lesson-graph",
+    "title": "그래프 인접 리스트 보기",
+    "category_id": "data-structures",
+    "description": "그래프 인접 리스트가 노드/엣지 형태로 어떻게 해석되는지 봅니다.",
+    "language": "python",
+    "visualization_mode": "graph-node-edge",
+    "difficulty": "초급",
+    "estimated_minutes": 18,
+    "tags": ["그래프", "인접 리스트", "노드", "간선"],
+    "learning_points": ["인접 리스트 표현 이해", "노드와 엣지 매핑 이해", "구조 변화 읽기"],
+    "source_code": "graph = {'A': ['B', 'C'], 'B': ['C'], 'C': []}\ngraph['B'].append('D')\ngraph['D'] = []\nprint(graph)",
+    "exercise": {
+      "prompt": "인접 리스트 그래프를 만들고 B에서 D로 가는 간선을 추가한 뒤, 최종 그래프를 반환하는 build_graph 함수를 구현하세요.",
+      "starter_code": "def build_graph():\n    graph = {'A': ['B', 'C'], 'B': ['C'], 'C': []}\n    # B에 D를 추가하고 D 노드를 만든 뒤 graph를 반환하세요.\n    return graph\n",
+      "checkpoints": ["인접 리스트 초기화하기", "간선 추가하기", "새 노드 추가 후 그래프 반환하기"],
+      "function_name": "build_graph",
+      "test_cases": [
+        {"id": "case-1", "args": [], "expected": {"A": ["B", "C"], "B": ["C", "D"], "C": [], "D": []}}
+      ]
+    }
+  }
+]
