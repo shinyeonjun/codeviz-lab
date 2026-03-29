@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.modules.executions.domain.trace import TraceExecutionResult
 from app.modules.executions.infrastructure.persistence.models import ExecutionRun, ExecutionStep
-from app.modules.executions.presentation.http.schemas import ExecutionRead, ExecutionStepRead
+from app.modules.executions.presentation.http.schemas import ExecutionFrameRead, ExecutionRead, ExecutionStepRead
 
 
 class SqlAlchemyExecutionRepository:
@@ -49,8 +49,18 @@ class SqlAlchemyExecutionRepository:
                     event_type=step.event_type,
                     function_name=step.function_name,
                     locals_snapshot=step.locals_snapshot,
+                    globals_snapshot=step.globals_snapshot,
                     stdout_snapshot=step.stdout_snapshot,
                     error_message=step.error_message,
+                    call_stack=[
+                        ExecutionFrameRead(
+                            function_name=frame.function_name,
+                            line_number=frame.line_number,
+                            locals_snapshot=frame.locals_snapshot,
+                        ).model_dump()
+                        for frame in step.call_stack
+                    ],
+                    trace_metadata=step.metadata,
                 )
             )
 
@@ -87,8 +97,14 @@ class SqlAlchemyExecutionRepository:
                 event_type=step.event_type,
                 function_name=step.function_name,
                 locals_snapshot=step.locals_snapshot,
+                globals_snapshot=step.globals_snapshot,
                 stdout_snapshot=step.stdout_snapshot,
                 error_message=step.error_message,
+                call_stack=[
+                    ExecutionFrameRead.model_validate(frame_payload)
+                    for frame_payload in (step.call_stack or [])
+                ],
+                metadata=step.trace_metadata or {},
             )
             for step in sorted(run.steps, key=lambda item: item.step_index)
         ]

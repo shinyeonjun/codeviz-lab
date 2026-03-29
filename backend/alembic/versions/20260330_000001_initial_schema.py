@@ -69,8 +69,11 @@ def upgrade() -> None:
         sa.Column("event_type", sa.String(length=20), nullable=False),
         sa.Column("function_name", sa.String(length=100), nullable=False),
         sa.Column("locals_snapshot", sa.JSON(), nullable=False),
+        sa.Column("globals_snapshot", sa.JSON(), nullable=False),
         sa.Column("stdout_snapshot", sa.Text(), nullable=False),
         sa.Column("error_message", sa.Text(), nullable=True),
+        sa.Column("call_stack", sa.JSON(), nullable=False),
+        sa.Column("metadata", sa.JSON(), nullable=False),
         sa.ForeignKeyConstraint(["run_id"], ["execution_runs.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )

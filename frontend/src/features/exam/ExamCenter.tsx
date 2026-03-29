@@ -456,7 +456,12 @@ export function ExamCenter() {
                 <ExecutionVisualization viz={studio.execution?.visualization} stepIndex={studio.stepIndex} />
               </Card>
 
-              <VariablesPanel localsSnapshot={studio.currentStepInfo?.locals_snapshot} />
+              <VariablesPanel
+                localsSnapshot={studio.currentStepInfo?.locals_snapshot}
+                globalsSnapshot={studio.currentStepInfo?.globals_snapshot}
+                callStack={studio.currentStepInfo?.call_stack}
+                metadata={studio.currentStepInfo?.metadata}
+              />
 
               <Card>
                 <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">문제 태그</h4>

@@ -17,13 +17,23 @@ def test_trace_execution_result_from_payload_builds_summary():
                     "event_type": "line",
                     "function_name": "main",
                     "locals_snapshot": {"value": 1},
+                    "globals_snapshot": {"numbers": [1, 2, 3]},
                     "stdout_snapshot": "",
+                    "call_stack": [
+                        {
+                            "function_name": "main",
+                            "line_number": 1,
+                            "locals_snapshot": {"value": 1},
+                        }
+                    ],
+                    "metadata": {"callStackDepth": 1},
                 },
                 {
                     "line_number": 2,
                     "event_type": "line",
                     "function_name": "main",
                     "locals_snapshot": {"value": 3},
+                    "globals_snapshot": {"numbers": [1, 3, 2]},
                     "stdout_snapshot": "3\n",
                 },
             ],
@@ -36,6 +46,10 @@ def test_trace_execution_result_from_payload_builds_summary():
     assert result.summary.function_names == ["main"]
     assert result.summary.has_stdout is True
     assert result.summary.has_errors is False
+    assert result.steps[0].globals_snapshot == {"numbers": [1, 2, 3]}
+    assert result.steps[0].call_stack[0].function_name == "main"
+    assert result.steps[0].metadata["callStackDepth"] == 1
+    assert result.steps[0].merged_snapshot["numbers"] == [1, 2, 3]
 
 
 def test_manual_selector_auto_detects_array_bars_for_c_sort_like_code():

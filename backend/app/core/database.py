@@ -36,6 +36,8 @@ def _apply_manual_migrations() -> None:
     table_names = set(inspector.get_table_names())
     if "execution_runs" in table_names:
         _migrate_execution_runs(inspector)
+    if "execution_steps" in table_names:
+        _migrate_execution_steps(inspector)
     if "exam_attempts" in table_names:
         _migrate_exam_attempts(inspector)
     if "auth_sessions" in table_names:
@@ -121,6 +123,38 @@ def _migrate_auth_sessions(inspector) -> None:
                 text(
                     "ALTER TABLE auth_sessions "
                     "ALTER COLUMN workspace_id DROP NOT NULL"
+                )
+            )
+
+
+def _migrate_execution_steps(inspector) -> None:
+    try:
+        execution_step_columns = {
+            column["name"] for column in inspector.get_columns("execution_steps")
+        }
+    except NoSuchTableError:
+        return
+
+    with engine.begin() as connection:
+        if "globals_snapshot" not in execution_step_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE execution_steps "
+                    "ADD COLUMN globals_snapshot JSON NOT NULL DEFAULT '{}'::json"
+                )
+            )
+        if "call_stack" not in execution_step_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE execution_steps "
+                    "ADD COLUMN call_stack JSON NOT NULL DEFAULT '[]'::json"
+                )
+            )
+        if "metadata" not in execution_step_columns:
+            connection.execute(
+                text(
+                    "ALTER TABLE execution_steps "
+                    "ADD COLUMN metadata JSON NOT NULL DEFAULT '{}'::json"
                 )
             )
 

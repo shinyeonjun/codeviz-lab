@@ -48,7 +48,10 @@ class ExecutionStep(Base):
     event_type: Mapped[str] = mapped_column(String(20), nullable=False)
     function_name: Mapped[str] = mapped_column(String(100), nullable=False)
     locals_snapshot: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    globals_snapshot: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     stdout_snapshot: Mapped[str] = mapped_column(Text, nullable=False, default="")
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    call_stack: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    trace_metadata: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, nullable=False, default=dict)
 
     run: Mapped[ExecutionRun] = relationship(back_populates="steps")

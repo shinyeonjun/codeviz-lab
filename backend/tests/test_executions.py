@@ -454,6 +454,33 @@ def test_create_execution_when_stdout_contains_surrogate_returns_sanitized_text(
     assert "\\udcbe" in payload["stdout"]
 
 
+def test_create_execution_exposes_global_trace_context_for_python(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "numbers = [5, 1, 3]\n"
+                "\n"
+                "def mutate():\n"
+                "    global numbers\n"
+                "    numbers[0], numbers[1] = numbers[1], numbers[0]\n"
+                "\n"
+                "mutate()\n"
+                "print(numbers)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "array-bars",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert any("numbers" in step["globals_snapshot"] for step in payload["steps"])
+    assert any(step["call_stack"] for step in payload["steps"])
+    assert payload["visualization"]["kind"] == "array-bars"
+
+
 @pytest.mark.skipif(shutil.which("gcc") is None, reason="gcc가 없는 환경에서는 C 실행 테스트를 건너뜁니다.")
 def test_create_execution_with_c_code_returns_trace_when_gdb_is_available(authenticated_client):
     response = authenticated_client.post(
@@ -488,3 +515,37 @@ def test_create_execution_with_c_code_returns_trace_when_gdb_is_available(authen
     else:
         assert payload["step_count"] >= 1
         assert any(step["function_name"] == "main" for step in payload["steps"])
+
+
+@pytest.mark.skipif(
+    shutil.which("gcc") is None or shutil.which("gdb") is None,
+    reason="gcc/gdb媛 ?녿뒗 ?섍꼍?먯꽌??C global trace ?뚯뒪?몃? 嫄대꼫?곷땲??",
+)
+def test_create_execution_with_c_global_matrix_supports_dp_table_visualization(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "c",
+            "source_code": (
+                "#include <stdio.h>\n"
+                "\n"
+                "int matrix[2][2] = {{0, 0}, {0, 0}};\n"
+                "\n"
+                "int main(void) {\n"
+                "    matrix[0][0] = 1;\n"
+                "    matrix[0][1] = 2;\n"
+                "    matrix[1][1] = 3;\n"
+                "    printf(\"%d\\n\", matrix[1][1]);\n"
+                "    return 0;\n"
+                "}\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "dp-table",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert any("matrix" in step["globals_snapshot"] for step in payload["steps"])
+    assert payload["visualizationMode"] == "dp-table"
+    assert payload["visualization"]["kind"] == "dp-table"

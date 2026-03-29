@@ -7,6 +7,7 @@ from app.modules.executions.visualizations.base.template import ExecutionVisuali
 from app.modules.executions.visualizations.shared.structure_extractors import (
     build_numeric_matrix_map,
     build_scalar_badges,
+    merge_scope_snapshots,
     resolve_active_cells,
     resolve_matched_cells,
     select_primary_name,
@@ -27,11 +28,12 @@ class DpTableExecutionTemplate(ExecutionVisualizationTemplate):
 
         extracted_steps: list[tuple[int, int, list[list[int | float]], dict[str, object]]] = []
         for step in execution.steps:
-            matrix_map = build_numeric_matrix_map(step.locals_snapshot)
+            merged_snapshot = merge_scope_snapshots(step.locals_snapshot, step.globals_snapshot)
+            matrix_map = build_numeric_matrix_map(merged_snapshot)
             matrix = matrix_map.get(source_variable)
             if matrix is None:
                 continue
-            extracted_steps.append((step.step_index, step.line_number, matrix, step.locals_snapshot))
+            extracted_steps.append((step.step_index, step.line_number, matrix, merged_snapshot))
 
         if not extracted_steps:
             return None

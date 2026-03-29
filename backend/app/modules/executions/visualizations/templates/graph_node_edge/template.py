@@ -6,6 +6,7 @@ from app.modules.executions.presentation.http.schemas import (
 from app.modules.executions.visualizations.base.template import ExecutionVisualizationTemplate
 from app.modules.executions.visualizations.shared.structure_extractors import (
     build_graph_map,
+    merge_scope_snapshots,
     resolve_focus_node_ids,
     select_primary_name,
 )
@@ -29,7 +30,8 @@ class GraphNodeEdgeExecutionTemplate(ExecutionVisualizationTemplate):
         previous_edge_keys: list[str] | None = None
 
         for step in execution.steps:
-            graph_map = build_graph_map(step.locals_snapshot)
+            merged_snapshot = merge_scope_snapshots(step.locals_snapshot, step.globals_snapshot)
+            graph_map = build_graph_map(merged_snapshot)
             graph = graph_map.get(source_variable)
             if graph is None:
                 continue
@@ -53,7 +55,7 @@ class GraphNodeEdgeExecutionTemplate(ExecutionVisualizationTemplate):
                             else []
                         ),
                         "focusNodeIds": resolve_focus_node_ids(
-                            step.locals_snapshot,
+                            merged_snapshot,
                             graph["nodes"],
                             exclude_names={source_variable},
                         ),

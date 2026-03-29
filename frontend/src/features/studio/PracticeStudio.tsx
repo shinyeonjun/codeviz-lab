@@ -176,7 +176,12 @@ export function PracticeStudio() {
             />
           </Card>
 
-          <VariablesPanel localsSnapshot={currentStepInfo?.locals_snapshot} />
+          <VariablesPanel
+            localsSnapshot={currentStepInfo?.locals_snapshot}
+            globalsSnapshot={currentStepInfo?.globals_snapshot}
+            callStack={currentStepInfo?.call_stack}
+            metadata={currentStepInfo?.metadata}
+          />
           <StdoutPanel stdoutSnapshot={currentStepInfo?.stdout_snapshot} execution={execution} />
         </div>
       </div>

@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import traceback
+import types
 from contextlib import redirect_stdout
 
 
@@ -81,15 +82,63 @@ def build_visible_locals(frame):
     }
 
 
-def append_step(steps, line_number, event_type, frame, stdout_buffer, error_message=None):
+def build_visible_globals(frame):
+    visible_globals = {}
+
+    for key, value in frame.f_globals.items():
+        if key.startswith("__"):
+            continue
+        if isinstance(value, (types.ModuleType, type)):
+            continue
+        if callable(value):
+            continue
+        visible_globals[key] = sanitize(value)
+
+    return visible_globals
+
+
+def build_call_stack(frame, source_path):
+    call_stack = []
+    current_frame = frame
+
+    while current_frame is not None:
+        if current_frame.f_code.co_filename == source_path:
+            call_stack.append(
+                {
+                    "function_name": current_frame.f_code.co_name,
+                    "line_number": current_frame.f_lineno,
+                    "locals_snapshot": build_visible_locals(current_frame),
+                }
+            )
+        current_frame = current_frame.f_back
+
+    call_stack.reverse()
+    return call_stack
+
+
+def build_step_metadata(locals_snapshot, globals_snapshot, call_stack):
+    return {
+        "localsCount": len(locals_snapshot),
+        "globalsCount": len(globals_snapshot),
+        "callStackDepth": len(call_stack),
+    }
+
+
+def append_step(steps, line_number, event_type, frame, stdout_buffer, source_path, error_message=None):
+    locals_snapshot = build_visible_locals(frame)
+    globals_snapshot = build_visible_globals(frame)
+    call_stack = build_call_stack(frame, source_path)
     steps.append(
         {
             "line_number": line_number,
             "event_type": event_type,
             "function_name": frame.f_code.co_name,
-            "locals_snapshot": build_visible_locals(frame),
+            "locals_snapshot": locals_snapshot,
+            "globals_snapshot": globals_snapshot,
             "stdout_snapshot": to_json_safe_text(stdout_buffer.getvalue()),
             "error_message": to_json_safe_text(error_message),
+            "call_stack": call_stack,
+            "metadata": build_step_metadata(locals_snapshot, globals_snapshot, call_stack),
         }
     )
 
@@ -172,11 +221,11 @@ def main():
 
         if event == "line":
             if pending_line is not None:
-                append_step(steps, pending_line, "line", frame, stdout_buffer)
+                append_step(steps, pending_line, "line", frame, stdout_buffer, source_path)
             pending_line = frame.f_lineno
         elif event == "return":
             if pending_line is not None:
-                append_step(steps, pending_line, "return", frame, stdout_buffer)
+                append_step(steps, pending_line, "return", frame, stdout_buffer, source_path)
                 pending_line = None
         elif event == "exception":
             exception_type, exception_value, _ = arg
@@ -187,6 +236,7 @@ def main():
                 "exception",
                 frame,
                 stdout_buffer,
+                source_path,
                 f"{exception_type.__name__}: {exception_value}",
             )
             pending_line = None

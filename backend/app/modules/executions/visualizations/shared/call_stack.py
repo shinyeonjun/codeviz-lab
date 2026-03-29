@@ -16,6 +16,32 @@ def build_call_stack_visualization(execution: ExecutionRead) -> ExecutionVisuali
         return None
 
     for step in execution.steps:
+        if step.call_stack:
+            frames = [
+                {
+                    "depth": depth,
+                    "functionName": frame.function_name,
+                    "isActive": depth == len(step.call_stack) - 1,
+                    "lineNumber": frame.line_number,
+                }
+                for depth, frame in enumerate(step.call_stack)
+            ]
+            step_states.append(
+                ExecutionVisualizationStepRead(
+                    step_index=step.step_index,
+                    line_number=step.line_number,
+                    payload={
+                        "frames": frames,
+                        "activeFunction": step.call_stack[-1].function_name,
+                        "eventType": step.event_type,
+                        "frameCount": len(frames),
+                        "activeDepth": len(frames) - 1 if frames else None,
+                    },
+                    message=f"{step.call_stack[-1].function_name} ?꾨젅?꾩쓣 異붿쟻?⑸땲??",
+                )
+            )
+            continue
+
         function_name = step.function_name
 
         if step.event_type == "line":

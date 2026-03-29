@@ -7,6 +7,7 @@ from app.modules.executions.visualizations.base.template import ExecutionVisuali
 from app.modules.executions.visualizations.shared.structure_extractors import (
     build_scalar_sequence_map,
     build_scalar_badges,
+    merge_scope_snapshots,
     resolve_active_indices,
     select_primary_name,
 )
@@ -28,7 +29,8 @@ class StackVerticalExecutionTemplate(ExecutionVisualizationTemplate):
         step_states: list[ExecutionVisualizationStepRead] = []
 
         for step in execution.steps:
-            sequence_map = build_scalar_sequence_map(step.locals_snapshot)
+            merged_snapshot = merge_scope_snapshots(step.locals_snapshot, step.globals_snapshot)
+            sequence_map = build_scalar_sequence_map(merged_snapshot)
             items = sequence_map.get(source_variable)
             if items is None:
                 continue
@@ -60,7 +62,7 @@ class StackVerticalExecutionTemplate(ExecutionVisualizationTemplate):
                         "pushedValue": pushed_value,
                         "poppedValue": popped_value,
                         "scalarBadges": build_scalar_badges(
-                            step.locals_snapshot,
+                            merged_snapshot,
                             exclude_names={source_variable},
                         ),
                     },

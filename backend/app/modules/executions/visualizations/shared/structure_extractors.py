@@ -11,6 +11,13 @@ class TrackStats:
     max_size: int = 0
 
 
+def merge_scope_snapshots(
+    locals_snapshot: dict[str, Any],
+    globals_snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {**(globals_snapshot or {}), **locals_snapshot}
+
+
 def is_numeric(value: Any) -> bool:
     return isinstance(value, int | float) and not isinstance(value, bool)
 
@@ -139,7 +146,9 @@ def select_primary_name(
     previous_values: dict[str, Any] = {}
 
     for step in execution.steps:
-        current_values = extractor(step.locals_snapshot)
+        current_values = extractor(
+            merge_scope_snapshots(step.locals_snapshot, step.globals_snapshot)
+        )
         for name, value in current_values.items():
             stats = track_stats.setdefault(name, TrackStats())
             stats.occurrence_count += 1

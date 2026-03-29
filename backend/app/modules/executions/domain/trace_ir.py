@@ -45,6 +45,7 @@ class TraceStepIR:
     function_name: str
     locals_snapshot: dict[str, Any]
     stdout_snapshot: str
+    globals_snapshot: dict[str, Any] = field(default_factory=dict)
     error_message: str | None = None
     call_stack: list[TraceFrame] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -69,6 +70,9 @@ class TraceStepIR:
             function_name = "<module>"
         if not isinstance(locals_snapshot, dict):
             locals_snapshot = {}
+        globals_snapshot = payload.get("globals_snapshot", payload.get("globalsSnapshot", {}))
+        if not isinstance(globals_snapshot, dict):
+            globals_snapshot = {}
         if not isinstance(stdout_snapshot, str):
             stdout_snapshot = str(stdout_snapshot)
         if error_message is not None and not isinstance(error_message, str):
@@ -87,11 +91,16 @@ class TraceStepIR:
             event_type=event_type,
             function_name=function_name,
             locals_snapshot=locals_snapshot,
+            globals_snapshot=globals_snapshot,
             stdout_snapshot=stdout_snapshot,
             error_message=error_message,
             call_stack=call_stack,
             metadata=metadata,
         )
+
+    @property
+    def merged_snapshot(self) -> dict[str, Any]:
+        return {**self.globals_snapshot, **self.locals_snapshot}
 
 
 @dataclass(slots=True)

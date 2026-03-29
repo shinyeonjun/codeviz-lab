@@ -7,6 +7,7 @@ from app.modules.executions.visualizations.base.template import ExecutionVisuali
 from app.modules.executions.visualizations.shared.structure_extractors import (
     build_character_sequence_map,
     build_index_pointers,
+    merge_scope_snapshots,
     build_scalar_badges,
     select_primary_name,
 )
@@ -62,11 +63,12 @@ class PalindromePointersExecutionTemplate(ExecutionVisualizationTemplate):
 
         extracted_steps: list[tuple[int, int, list[str], dict[str, object]]] = []
         for step in execution.steps:
-            sequence_map = build_character_sequence_map(step.locals_snapshot)
+            merged_snapshot = merge_scope_snapshots(step.locals_snapshot, step.globals_snapshot)
+            sequence_map = build_character_sequence_map(merged_snapshot)
             items = sequence_map.get(source_variable)
             if items is None:
                 continue
-            extracted_steps.append((step.step_index, step.line_number, items, step.locals_snapshot))
+            extracted_steps.append((step.step_index, step.line_number, items, merged_snapshot))
 
         if not extracted_steps:
             return None

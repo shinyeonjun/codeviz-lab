@@ -214,7 +214,12 @@ export function ExecutionStudio({
             />
           </Card>
 
-          <VariablesPanel localsSnapshot={currentStepInfo?.locals_snapshot} />
+          <VariablesPanel
+            localsSnapshot={currentStepInfo?.locals_snapshot}
+            globalsSnapshot={currentStepInfo?.globals_snapshot}
+            callStack={currentStepInfo?.call_stack}
+            metadata={currentStepInfo?.metadata}
+          />
 
           <Card>
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">

@@ -6,6 +6,7 @@ from app.modules.executions.presentation.http.schemas import (
 from app.modules.executions.visualizations.base.template import ExecutionVisualizationTemplate
 from app.modules.executions.visualizations.shared.structure_extractors import (
     build_binary_tree_map,
+    merge_scope_snapshots,
     resolve_focus_node_ids,
     select_primary_name,
 )
@@ -29,7 +30,8 @@ class TreeBinaryExecutionTemplate(ExecutionVisualizationTemplate):
         previous_edge_keys: list[str] | None = None
 
         for step in execution.steps:
-            tree_map = build_binary_tree_map(step.locals_snapshot)
+            merged_snapshot = merge_scope_snapshots(step.locals_snapshot, step.globals_snapshot)
+            tree_map = build_binary_tree_map(merged_snapshot)
             tree = tree_map.get(source_variable)
             if tree is None:
                 continue
@@ -55,7 +57,7 @@ class TreeBinaryExecutionTemplate(ExecutionVisualizationTemplate):
                         "activeNodeIds": active_node_ids,
                         "activeEdgeIds": active_edge_ids,
                         "focusNodeIds": resolve_focus_node_ids(
-                            step.locals_snapshot,
+                            merged_snapshot,
                             tree["nodes"],
                             exclude_names={source_variable},
                         ),

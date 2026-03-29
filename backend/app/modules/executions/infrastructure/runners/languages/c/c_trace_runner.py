@@ -134,6 +134,67 @@ def detect_candidate_lines(source_code: str) -> list[int]:
     return candidate_lines
 
 
+def detect_global_names(source_code: str) -> list[str]:
+    global_names: list[str] = []
+    buffer = ""
+    brace_depth = 0
+    in_block_comment = False
+
+    for raw_line in source_code.splitlines():
+        stripped = raw_line.strip()
+        if not stripped:
+            continue
+
+        if in_block_comment:
+            if "*/" in stripped:
+                in_block_comment = False
+            continue
+
+        if stripped.startswith("/*"):
+            if "*/" not in stripped:
+                in_block_comment = True
+            continue
+
+        if stripped.startswith("//") or stripped.startswith("#"):
+            continue
+
+        if brace_depth == 0:
+            buffer = f"{buffer} {stripped}".strip()
+            if ";" in stripped:
+                statements = buffer.split(";")
+                for statement in statements[:-1]:
+                    _collect_global_names_from_statement(statement, global_names)
+                buffer = statements[-1].strip()
+
+        open_braces = stripped.count("{")
+        close_braces = stripped.count("}")
+
+        brace_depth = max(0, brace_depth + open_braces - close_braces)
+        if brace_depth > 0:
+            buffer = ""
+
+    return global_names
+
+
+def _collect_global_names_from_statement(statement: str, global_names: list[str]) -> None:
+    stripped = statement.strip()
+    if not stripped:
+        return
+    if "(" in stripped:
+        return
+    if stripped.startswith(("typedef ", "struct ", "enum ", "union ")):
+        return
+
+    declaration_parts = [part.strip() for part in stripped.split(",")]
+    for part in declaration_parts:
+        match = re.search(r"([A-Za-z_]\w*)\s*(?:\[[^\]]*\])*\s*(?:=\s*.+)?$", part)
+        if match is None:
+            continue
+        candidate = match.group(1)
+        if candidate not in global_names:
+            global_names.append(candidate)
+
+
 def build_gdb_script(
     *,
     source_path: Path,
@@ -142,10 +203,12 @@ def build_gdb_script(
     stderr_path: Path,
     result_path: Path,
     candidate_lines: list[int],
+    global_names: list[str],
     max_trace_steps: int,
     max_stdout_chars: int,
 ) -> str:
     breakpoints_json = json.dumps(candidate_lines)
+    global_names_json = json.dumps(global_names)
     return textwrap.dedent(
         f"""
         set pagination off
@@ -168,6 +231,7 @@ def build_gdb_script(
         MAX_TRACE_STEPS = {max_trace_steps}
         MAX_STDOUT_CHARS = {max_stdout_chars}
         BREAKPOINT_LINES = json.loads({json.dumps(breakpoints_json)})
+        GLOBAL_NAMES = json.loads({json.dumps(global_names_json)})
         TRACE_STEPS = []
         TRACE_TRUNCATED = False
         SIGNAL_MESSAGE = None
@@ -275,6 +339,14 @@ def build_gdb_script(
             return locals_snapshot
 
 
+        def parse_print_output(text):
+            normalized = text.strip()
+            if not normalized or " = " not in normalized:
+                return None
+            _, value = normalized.split(" = ", 1)
+            return parse_value(value)
+
+
         def read_stdout_snapshot():
             stdout_text = pathlib.Path(STDOUT_PATH).read_text(encoding="utf-8", errors="backslashreplace") if pathlib.Path(STDOUT_PATH).exists() else ""
             stdout_text, _ = truncate_text(stdout_text, MAX_STDOUT_CHARS)
@@ -296,6 +368,65 @@ def build_gdb_script(
             return locals_snapshot
 
 
+        def read_globals_snapshot():
+            globals_snapshot = {{}}
+            for name in GLOBAL_NAMES:
+                try:
+                    printed = gdb.execute(f"print {{name}}", to_string=True)
+                except gdb.error:
+                    continue
+                parsed_value = parse_print_output(printed)
+                if parsed_value is None:
+                    continue
+                globals_snapshot[to_safe_text(name)] = parsed_value
+            return globals_snapshot
+
+
+        def read_call_stack():
+            try:
+                backtrace_text = gdb.execute("bt", to_string=True)
+            except gdb.error:
+                return []
+
+            frames = []
+            for raw_line in backtrace_text.splitlines():
+                line = raw_line.strip()
+                if not line.startswith("#"):
+                    continue
+
+                line_number = None
+                line_match = re.search(r":(\\d+)(?:\\s|$)", line)
+                if line_match is not None:
+                    try:
+                        line_number = int(line_match.group(1))
+                    except ValueError:
+                        line_number = None
+
+                name_match = re.search(
+                    r"#\\d+\\s+(?:0x[0-9a-fA-F]+\\s+in\\s+)?([A-Za-z_][\\w]*)",
+                    line,
+                )
+                function_name = name_match.group(1) if name_match is not None else "<unknown>"
+                frames.append(
+                    {{
+                        "function_name": to_safe_text(function_name),
+                        "line_number": line_number,
+                        "locals_snapshot": {{}},
+                    }}
+                )
+
+            frames.reverse()
+            return frames
+
+
+        def build_step_metadata(locals_snapshot, globals_snapshot, call_stack):
+            return {{
+                "localsCount": len(locals_snapshot),
+                "globalsCount": len(globals_snapshot),
+                "callStackDepth": len(call_stack),
+            }}
+
+
         def disable_all_breakpoints():
             for breakpoint in gdb.breakpoints() or []:
                 breakpoint.enabled = False
@@ -311,14 +442,20 @@ def build_gdb_script(
 
                 frame = gdb.selected_frame()
                 sal = frame.find_sal()
+                locals_snapshot = read_locals_snapshot()
+                globals_snapshot = read_globals_snapshot()
+                call_stack = read_call_stack()
                 TRACE_STEPS.append(
                     {{
                         "line_number": sal.line or 0,
                         "event_type": "line",
                         "function_name": to_safe_text(frame.name() or "<unknown>"),
-                        "locals_snapshot": read_locals_snapshot(),
+                        "locals_snapshot": locals_snapshot,
+                        "globals_snapshot": globals_snapshot,
                         "stdout_snapshot": read_stdout_snapshot(),
                         "error_message": None,
+                        "call_stack": call_stack,
+                        "metadata": build_step_metadata(locals_snapshot, globals_snapshot, call_stack),
                     }}
                 )
                 return False
@@ -426,6 +563,7 @@ def run_gdb_trace(
         stderr_path = trace_path / "stderr.txt"
         result_path = trace_path / "result.json"
         script_path = trace_path / "trace.gdb"
+        source_text = source_path.read_text(encoding="utf-8")
 
         stdin_path.write_text(stdin_text, encoding="utf-8")
         stdout_path.write_text("", encoding="utf-8")
@@ -437,7 +575,8 @@ def run_gdb_trace(
                 stdout_path=stdout_path,
                 stderr_path=stderr_path,
                 result_path=result_path,
-                candidate_lines=detect_candidate_lines(source_path.read_text(encoding="utf-8")),
+                candidate_lines=detect_candidate_lines(source_text),
+                global_names=detect_global_names(source_text),
                 max_trace_steps=max_trace_steps,
                 max_stdout_chars=max_stdout_chars,
             ),

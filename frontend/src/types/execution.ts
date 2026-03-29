@@ -14,14 +14,23 @@ export type VisualizationKind =
 export type VisualizationMode = string;
 export type VisualizationRequestMode = string;
 
+export interface ExecutionFrame {
+  function_name: string;
+  line_number?: number | null;
+  locals_snapshot: Record<string, unknown>;
+}
+
 export interface ExecutionStep {
   step_index: number;
   line_number: number;
   event_type: string;
   function_name: string;
   locals_snapshot: Record<string, unknown>;
+  globals_snapshot: Record<string, unknown>;
   stdout_snapshot: string;
   error_message: string | null;
+  call_stack: ExecutionFrame[];
+  metadata: Record<string, unknown>;
 }
 
 export interface VisualizationStepState {

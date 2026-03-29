@@ -31,14 +31,23 @@ class ExecutionCreate(BaseModel):
     )
 
 
+class ExecutionFrameRead(BaseModel):
+    function_name: str
+    line_number: int | None = None
+    locals_snapshot: dict[str, Any] = Field(default_factory=dict)
+
+
 class ExecutionStepRead(BaseModel):
     step_index: int
     line_number: int
     event_type: str
     function_name: str
     locals_snapshot: dict[str, Any]
+    globals_snapshot: dict[str, Any] = Field(default_factory=dict)
     stdout_snapshot: str
     error_message: str | None = None
+    call_stack: list[ExecutionFrameRead] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExecutionVisualizationStepRead(BaseModel):
