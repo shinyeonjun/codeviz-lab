@@ -8,9 +8,12 @@
 
 - `app/core`: 설정, DB 연결 같은 공통 인프라
 - `app/common`: 공통 응답 형식
+- `app/modules/auth`: 로그인/세션 인증
 - `app/modules/health`: 상태 확인
-- `app/modules/examples`: 예제 코드 조회
+- `app/modules/examples`: 학습 카탈로그 기반 예제 코드 조회
+- `app/modules/learning`: 학습 카테고리/수업 카탈로그
 - `app/modules/executions`: 코드 실행, trace 저장, WebSocket 스트림
+- `app/modules/exams`: 카테고리 시험, 채점 결과 저장
 
 `executions` 모듈은 다음 책임으로 나뉩니다.
 
@@ -39,13 +42,22 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 3. 환경 변수 설정
+### 3. PostgreSQL 실행
+
+SQLite는 더 이상 지원하지 않습니다. 로컬 개발도 PostgreSQL 기준입니다.
+
+```powershell
+cd D:\hohyun\backend
+.\scripts\setup_docker.ps1
+```
+
+### 4. 환경 변수 설정
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-### 4. 서버 실행
+### 5. 서버 실행
 
 ```powershell
 uvicorn app.main:app --reload
@@ -60,6 +72,27 @@ uvicorn app.main:app --reload
 
 ```powershell
 pytest
+```
+
+## Alembic 마이그레이션
+
+앞으로 스키마 변경은 Alembic 기준으로 관리합니다.
+
+```powershell
+cd D:\hohyun\backend
+venv\Scripts\Activate.ps1
+python .\scripts\bootstrap_alembic.py
+```
+
+이 스크립트는 두 경우를 자동으로 처리합니다.
+
+- 기존 앱이 이미 만든 테이블이 있으면 `alembic stamp head`
+- 새 DB면 `alembic upgrade head`
+
+새 마이그레이션을 만들 때는 아래처럼 사용합니다.
+
+```powershell
+alembic revision -m "설명"
 ```
 
 ## Docker 개발 환경
