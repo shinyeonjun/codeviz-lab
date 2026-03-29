@@ -29,6 +29,10 @@ jobs:
 
     env:
       DATABASE_URL: postgresql+psycopg://codeviz:codeviz@127.0.0.1:5432/codeviz
+      TEST_DATABASE_HOST: 127.0.0.1
+      TEST_DATABASE_PORT: 5432
+      TEST_DATABASE_USER: codeviz
+      TEST_DATABASE_PASSWORD: codeviz
       RUNNER_BACKEND: local
       VISUALIZATION_SELECTOR_BACKEND: manual
 

@@ -5,14 +5,24 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
+TEST_DATABASE_HOST = os.getenv("TEST_DATABASE_HOST", "127.0.0.1")
 TEST_DATABASE_PORT = os.getenv("TEST_DATABASE_PORT", "55433")
+TEST_DATABASE_USER = os.getenv("TEST_DATABASE_USER", "codeviz")
+TEST_DATABASE_PASSWORD = os.getenv("TEST_DATABASE_PASSWORD", "codeviz")
+TEST_DATABASE_ADMIN_DB = os.getenv("TEST_DATABASE_ADMIN_DB", "postgres")
 TEST_DATABASE_NAME = f"codeviz_test_{uuid4().hex}"
 TEST_DATABASE_ADMIN_URL = os.getenv(
     "TEST_DATABASE_ADMIN_URL",
-    f"postgresql+psycopg://codeviz:codeviz@127.0.0.1:{TEST_DATABASE_PORT}/postgres",
+    (
+        "postgresql+psycopg://"
+        f"{TEST_DATABASE_USER}:{TEST_DATABASE_PASSWORD}"
+        f"@{TEST_DATABASE_HOST}:{TEST_DATABASE_PORT}/{TEST_DATABASE_ADMIN_DB}"
+    ),
 )
 TEST_DATABASE_URL = (
-    f"postgresql+psycopg://codeviz:codeviz@127.0.0.1:{TEST_DATABASE_PORT}/{TEST_DATABASE_NAME}"
+    "postgresql+psycopg://"
+    f"{TEST_DATABASE_USER}:{TEST_DATABASE_PASSWORD}"
+    f"@{TEST_DATABASE_HOST}:{TEST_DATABASE_PORT}/{TEST_DATABASE_NAME}"
 )
 
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
