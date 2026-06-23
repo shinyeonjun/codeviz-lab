@@ -16,16 +16,17 @@ TEST_DATABASE_ADMIN_URL = os.getenv(
     (
         "postgresql+psycopg://"
         f"{TEST_DATABASE_USER}:{TEST_DATABASE_PASSWORD}"
-        f"@{TEST_DATABASE_HOST}:{TEST_DATABASE_PORT}/{TEST_DATABASE_ADMIN_DB}"
+        f"@{TEST_DATABASE_HOST}:{TEST_DATABASE_PORT}/{TEST_DATABASE_ADMIN_DB}?connect_timeout=3"
     ),
 )
 TEST_DATABASE_URL = (
     "postgresql+psycopg://"
     f"{TEST_DATABASE_USER}:{TEST_DATABASE_PASSWORD}"
-    f"@{TEST_DATABASE_HOST}:{TEST_DATABASE_PORT}/{TEST_DATABASE_NAME}"
+    f"@{TEST_DATABASE_HOST}:{TEST_DATABASE_PORT}/{TEST_DATABASE_NAME}?connect_timeout=3"
 )
 
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["DEBUG"] = "false"
 os.environ["RUNNER_TIMEOUT_SECONDS"] = "2"
 os.environ["RUNNER_BACKEND"] = "local"
 
@@ -60,7 +61,7 @@ def _drop_test_database() -> None:
         admin_engine.dispose()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def prepare_database():
     _drop_test_database()
     _create_test_database()
@@ -71,8 +72,8 @@ def prepare_database():
     _drop_test_database()
 
 
-@pytest.fixture(autouse=True)
-def clean_database():
+@pytest.fixture()
+def clean_database(prepare_database):
     with engine.begin() as connection:
         for table in reversed(Base.metadata.sorted_tables):
             connection.execute(table.delete())
@@ -80,7 +81,7 @@ def clean_database():
 
 
 @pytest.fixture()
-def client():
+def client(clean_database):
     with TestClient(app) as test_client:
         yield test_client
 

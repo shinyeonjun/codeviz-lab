@@ -21,6 +21,11 @@ class User(Base):
     sessions = relationship("AuthSession", back_populates="user")
     executions = relationship("ExecutionRun", back_populates="user")
     exam_attempts = relationship("ExamAttempt", back_populates="user")
+    lesson_progress = relationship(
+        "UserLessonProgress",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
 
 class AuthSession(Base):

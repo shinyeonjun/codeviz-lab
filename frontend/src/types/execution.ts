@@ -1,4 +1,4 @@
-export type ExecutionLanguage = 'python' | 'c';
+export type ExecutionLanguage = 'python' | 'c' | 'java';
 
 export type VisualizationKind =
   | 'array-bars'
@@ -9,7 +9,10 @@ export type VisualizationKind =
   | 'call-stack'
   | 'dp-table'
   | 'tree-binary'
-  | 'graph-node-edge';
+  | 'graph-node-edge'
+  | 'flowchart'
+  | 'hybrid'
+  | 'algorithm-showcase';
 
 export type VisualizationMode = string;
 export type VisualizationRequestMode = string;
@@ -50,6 +53,16 @@ export interface VisualizationData {
   metadata?: Record<string, unknown>;
 }
 
+export interface ExecutionAnalysis {
+  selectedMode: VisualizationMode;
+  reason: string;
+  confidence?: number | null;
+  summary: string;
+  observations: string[];
+  learningPoints: string[];
+  alternatives: VisualizationMode[];
+}
+
 export interface ExecutionResult {
   run_id: string;
   language: ExecutionLanguage;
@@ -65,4 +78,5 @@ export interface ExecutionResult {
   completed_at?: string | null;
   steps: ExecutionStep[];
   visualization?: VisualizationData | null;
+  analysis?: ExecutionAnalysis | null;
 }

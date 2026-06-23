@@ -1,71 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMonaco } from '@monaco-editor/react';
-import { FileText, Loader2, Play, RotateCcw } from 'lucide-react';
+import { FileCheck2, FileText, Loader2, Play, RotateCcw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { createExamSession, fetchExamCategories, submitExamAnswer } from '../../lib/api';
-import type {
-  ExamCategory,
-  ExamQuestion,
-  ExamSession,
-  ExamSubmissionResult,
-} from '../../types/exam';
-import type { StudioLessonSeed } from '../../types/learning';
-import { ExecutionVisualization } from '../studio/ExecutionVisualization';
+import {
+  createExamSession,
+  fetchExamCategories,
+  getErrorMessage,
+  shouldReportError,
+  submitExamAnswer,
+} from '../../lib/api';
+import type { ExamCategory, ExamSession, ExamSubmissionResult } from '../../types/exam';
+import { GradingResultCard } from './components/GradingResultCard';
+import { WrongReviewCard } from './components/WrongReviewCard';
+import {
+  buildQuestionSeed,
+  createEmptyExamSeed,
+  getWrongReviewItems,
+  QUESTION_COUNT_OPTIONS,
+} from './examCenterUtils';
 import { CodeEditorPanel } from '../studio/components/CodeEditorPanel';
-import { ExecutionErrorPanel } from '../studio/components/ExecutionErrorPanel';
-import { PlaybackControls } from '../studio/components/PlaybackControls';
+import { ExecutionResultPanel } from '../studio/components/ExecutionResultPanel';
 import { StdoutPanel } from '../studio/components/StdoutPanel';
-import { VariablesPanel } from '../studio/components/VariablesPanel';
 import { useLineHighlight } from '../studio/hooks/useLineHighlight';
 import { useExecutionStudio } from '../studio/useExecutionStudio';
+import { getEditorFileName } from '../studio/utils/languageUtils';
+import type { ExecutionLanguage } from '../../types/execution';
 
-
-function createEmptyExamSeed(): StudioLessonSeed {
-  return {
-    id: 'exam-empty',
-    title: '시험을 준비하는 중',
-    categoryName: '시험',
-    description: '카테고리를 선택하고 시험을 시작하세요.',
-    language: 'python',
-    visualizationMode: 'none',
-    sourceCode: '',
-    difficulty: '시험',
-    estimatedMinutes: 0,
-    learningPoints: [],
-    tags: [],
-  };
-}
-
-function buildQuestionSeed(question: ExamQuestion, code: string): StudioLessonSeed {
-  return {
-    id: question.id,
-    title: question.title,
-    categoryName: question.categoryName,
-    description: question.prompt,
-    language: 'python',
-    visualizationMode: question.visualizationMode,
-    sourceCode: code,
-    difficulty: question.difficulty,
-    estimatedMinutes: question.estimatedMinutes,
-    learningPoints: [],
-    tags: question.tags,
-  };
-}
-
-const QUESTION_COUNT_OPTIONS = [2, 3, 5];
-
-function formatValue(value: unknown) {
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
+const EXAM_LANGUAGE_OPTIONS: { id: ExecutionLanguage; label: string }[] = [
+  { id: 'python', label: 'Python' },
+  { id: 'c', label: 'C' },
+  { id: 'java', label: 'Java' },
+];
 
 export function ExamCenter() {
   const monaco = useMonaco();
@@ -75,6 +41,7 @@ export function ExamCenter() {
 
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<ExecutionLanguage>('python');
   const [questionCount, setQuestionCount] = useState(3);
   const [session, setSession] = useState<ExamSession | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -101,19 +68,21 @@ export function ExamCenter() {
       setIsLoading(true);
       setError(null);
       try {
-        const categoryData = await fetchExamCategories();
+        const categoryData = await fetchExamCategories({ language: selectedLanguage });
         setCategories(categoryData);
         setSelectedCategoryId(categoryData[0]?.id ?? null);
       } catch (loadError) {
-        console.error(loadError);
-        setError('시험 카테고리를 불러오지 못했습니다.');
+        if (shouldReportError(loadError)) {
+          console.error(loadError);
+        }
+        setError(getErrorMessage(loadError, '시험 카테고리를 불러오지 못했습니다.'));
       } finally {
         setIsLoading(false);
       }
     };
 
     void load();
-  }, []);
+  }, [selectedLanguage]);
 
   useEffect(() => {
     if (!currentQuestion) {
@@ -123,7 +92,7 @@ export function ExamCenter() {
     setSubmissionError(null);
     const code = answerMap[currentQuestion.id] ?? currentQuestion.starterCode;
     studio.applyLesson(buildQuestionSeed(currentQuestion, code));
-    // 현재 문제 전환에만 에디터를 맞춘다.
+    // 현재 문제 전환 시에만 에디터 seed를 맞춘다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestion?.id]);
 
@@ -147,6 +116,9 @@ export function ExamCenter() {
     () => categories.find((category) => category.id === selectedCategoryId) ?? null,
     [categories, selectedCategoryId],
   );
+  const effectiveQuestionCount = selectedCategory
+    ? Math.min(questionCount, selectedCategory.questionCount)
+    : questionCount;
 
   const gradedQuestionCount = useMemo(() => Object.keys(submissionMap).length, [submissionMap]);
   const totalScore = useMemo(() => {
@@ -169,6 +141,12 @@ export function ExamCenter() {
     return session.questions.filter((question) => submissionMap[question.id]?.status === 'passed').length;
   }, [session, submissionMap]);
 
+  const wrongQuestionCount = session ? gradedQuestionCount - passedQuestionCount : 0;
+  const wrongReviewItems = useMemo(
+    () => getWrongReviewItems(session, submissionMap),
+    [session, submissionMap],
+  );
+
   const startExam = async () => {
     if (!selectedCategoryId) {
       return;
@@ -180,7 +158,8 @@ export function ExamCenter() {
     try {
       const nextSession = await createExamSession({
         categoryId: selectedCategoryId,
-        questionCount,
+        questionCount: effectiveQuestionCount,
+        language: selectedLanguage,
       });
       setSession(nextSession);
       setCurrentQuestionIndex(0);
@@ -189,8 +168,10 @@ export function ExamCenter() {
       setSubmissionError(null);
       studio.resetStudio();
     } catch (startError) {
-      console.error(startError);
-      setError(startError instanceof Error ? startError.message : '시험을 시작하지 못했습니다.');
+      if (shouldReportError(startError)) {
+        console.error(startError);
+      }
+      setError(getErrorMessage(startError, '시험을 시작하지 못했습니다.'));
     } finally {
       setIsStarting(false);
     }
@@ -225,16 +206,17 @@ export function ExamCenter() {
       const submission = await submitExamAnswer({
         lessonId: currentQuestion.lessonId,
         sourceCode: studio.code,
+        language: currentQuestion.language,
       });
       setSubmissionMap((prev) => ({
         ...prev,
         [currentQuestion.id]: submission,
       }));
     } catch (submitError) {
-      console.error(submitError);
-      setSubmissionError(
-        submitError instanceof Error ? submitError.message : '채점 중 오류가 발생했습니다.',
-      );
+      if (shouldReportError(submitError)) {
+        console.error(submitError);
+      }
+      setSubmissionError(getErrorMessage(submitError, '채점 중 오류가 발생했습니다.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -254,7 +236,9 @@ export function ExamCenter() {
     <div className="mx-auto w-full max-w-[1440px] px-6 py-6">
       <div className="mb-5">
         <h2 className="text-2xl font-bold text-ink">시험</h2>
-        <p className="mt-1 text-sm text-ink-secondary">카테고리를 고르고 랜덤 문제로 실력을 점검합니다.</p>
+        <p className="mt-1 text-sm text-ink-secondary">
+          지금까지 학습한 템플릿 안에서만 랜덤 문제를 뽑아 실력을 점검합니다.
+        </p>
       </div>
 
       {!session ? (
@@ -266,6 +250,11 @@ export function ExamCenter() {
             </Card>
           ) : (
             <>
+              {categories.length === 0 ? (
+                <Card className="text-sm text-ink-muted">
+                  아직 학습한 템플릿이 없습니다. 메인 화면에서 템플릿을 먼저 열어 학습하면 시험 범위에 추가됩니다.
+                </Card>
+              ) : (
               <div className="grid gap-3 md:grid-cols-3">
                 {categories.map((category) => {
                   const isActive = category.id === selectedCategoryId;
@@ -291,23 +280,53 @@ export function ExamCenter() {
                   );
                 })}
               </div>
+              )}
 
               <Card>
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">언어</p>
+                      <div className="mt-2 flex gap-2">
+                        {EXAM_LANGUAGE_OPTIONS.map((language) => {
+                          const isActive = language.id === selectedLanguage;
+                          return (
+                            <button
+                              key={language.id}
+                              type="button"
+                              onClick={() => setSelectedLanguage(language.id)}
+                              className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                                isActive
+                                  ? 'border-accent/40 bg-accent-light/40 text-accent'
+                                  : 'border-surface-border bg-white text-ink-secondary hover:bg-surface-soft'
+                              }`}
+                            >
+                              {language.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">문항 수</p>
                     <div className="mt-2 flex gap-2">
                       {QUESTION_COUNT_OPTIONS.map((count) => {
                         const isActive = count === questionCount;
+                        const exceedsAvailableCount = selectedCategory
+                          ? count > selectedCategory.questionCount
+                          : false;
                         return (
                           <button
                             key={count}
                             type="button"
                             onClick={() => setQuestionCount(count)}
+                            disabled={exceedsAvailableCount}
                             className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
                               isActive
                                 ? 'border-accent/40 bg-accent-light/40 text-accent'
-                                : 'border-surface-border bg-white text-ink-secondary hover:bg-surface-soft'
+                                : exceedsAvailableCount
+                                  ? 'border-surface-border bg-surface-soft text-ink-faint'
+                                  : 'border-surface-border bg-white text-ink-secondary hover:bg-surface-soft'
                             }`}
                           >
                             {count}문항
@@ -315,12 +334,13 @@ export function ExamCenter() {
                         );
                       })}
                     </div>
+                    </div>
                   </div>
 
                   <Button
                     variant="primary"
                     onClick={() => void startExam()}
-                    disabled={!selectedCategory || isStarting}
+                    disabled={!selectedCategory || selectedCategory.questionCount === 0 || isStarting}
                   >
                     {isStarting ? (
                       <>
@@ -330,7 +350,7 @@ export function ExamCenter() {
                     ) : (
                       <>
                         <FileText size={14} />
-                        시험 시작
+                        {effectiveQuestionCount}문항 시험 시작
                       </>
                     )}
                   </Button>
@@ -350,19 +370,20 @@ export function ExamCenter() {
                   문제 {currentQuestionIndex + 1} / {session.questionCount}
                 </h3>
                 <p className="mt-2 text-xs text-ink-muted">
-                  채점 완료 {gradedQuestionCount}/{session.questionCount} · 총점 {totalScore}점 · 통과 {passedQuestionCount}문항
+                  채점 완료 {gradedQuestionCount}/{session.questionCount} · 총점 {totalScore}점 · 통과 {passedQuestionCount}문항 · 오답 {wrongQuestionCount}문항
                 </p>
                 {currentQuestion && (
                   <p className="mt-2 text-sm leading-relaxed text-ink-secondary">{currentQuestion.prompt}</p>
                 )}
               </div>
-              <div className="flex gap-1.5">
-                <Button variant="outline" onClick={resetExam}>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="min-w-[104px]" onClick={resetExam}>
                   <RotateCcw size={14} />
                   다른 시험
                 </Button>
                 <Button
                   variant="outline"
+                  className="min-w-[104px]"
                   onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
                   disabled={currentQuestionIndex === 0}
                 >
@@ -370,6 +391,7 @@ export function ExamCenter() {
                 </Button>
                 <Button
                   variant="primary"
+                  className="min-w-[104px]"
                   onClick={() =>
                     setCurrentQuestionIndex((prev) => Math.min(session.questions.length - 1, prev + 1))
                   }
@@ -381,35 +403,44 @@ export function ExamCenter() {
             </div>
           </Card>
 
+          <WrongReviewCard
+            items={wrongReviewItems}
+            onSelectQuestion={setCurrentQuestionIndex}
+          />
+
           <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div className="rounded-lg border border-surface-border bg-white px-3 py-1.5 text-sm text-ink-secondary">
-                  시험 시각화: {studio.visualizationMode}
+                  AI가 trace를 분석해 시각화 템플릿을 선택합니다.
                 </div>
-                <div className="flex gap-1.5">
-                  <Button variant="outline" onClick={studio.resetStudio}>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" className="min-w-[96px]" onClick={studio.resetStudio}>
                     <RotateCcw size={14} />
                     초기화
                   </Button>
                   <Button
                     variant="outline"
+                    className="min-w-[112px]"
                     onClick={() => void studio.handleRun()}
                     disabled={studio.isRunning || !studio.code.trim()}
+                    title="현재 코드를 실행해 trace와 stdout을 확인합니다."
                   >
                     {studio.isRunning ? (
                       '분석 중...'
                     ) : (
                       <>
                         <Play size={14} />
-                        실행
+                        실행 추적
                       </>
                     )}
                   </Button>
                   <Button
                     variant="primary"
+                    className="min-w-[112px]"
                     onClick={() => void handleSubmit()}
                     disabled={isSubmitting || !studio.code.trim()}
+                    title="현재 답안을 채점 서버에 제출합니다."
                   >
                     {isSubmitting ? (
                       <>
@@ -418,8 +449,8 @@ export function ExamCenter() {
                       </>
                     ) : (
                       <>
-                        <FileText size={14} />
-                        채점
+                        <FileCheck2 size={14} />
+                        채점 제출
                       </>
                     )}
                   </Button>
@@ -427,43 +458,42 @@ export function ExamCenter() {
               </div>
 
               <CodeEditorPanel
-                fileName="exam.py"
-                language="python"
+                fileName={getEditorFileName(studio.language, 'exam')}
+                language={studio.language}
                 code={studio.code}
                 onChange={handleCodeChange}
                 editorRef={editorRef}
               />
+
+              <StdoutPanel
+                title="?ㅽ뻾 stdout"
+                emptyText="?ㅽ뻾 ?꾩엯?덈떎."
+                stdoutSnapshot={studio.currentStepInfo?.stdout_snapshot}
+                execution={studio.execution}
+              />
             </div>
 
-            <div className="space-y-3">
-              <PlaybackControls
-                canControl={Boolean(studio.execution)}
-                isPlaying={studio.isPlaying}
-                stepIndex={studio.stepIndex}
-                totalSteps={studio.totalSteps}
-                playbackSpeed={studio.playbackSpeed}
-                onTogglePlay={studio.togglePlay}
-            onPrev={studio.stepPrev}
-            onNext={studio.stepNext}
-            onReset={studio.stepReset}
-            onJumpToEnd={studio.stepEnd}
-            onSeek={studio.seekStep}
-            onPlaybackSpeedChange={studio.setPlaybackSpeed}
-          />
-
-              <ExecutionErrorPanel requestError={studio.requestError} execution={studio.execution} />
-
-              <Card>
-                <ExecutionVisualization viz={studio.execution?.visualization} stepIndex={studio.stepIndex} />
-              </Card>
-
-              <VariablesPanel
-                localsSnapshot={studio.currentStepInfo?.locals_snapshot}
-                globalsSnapshot={studio.currentStepInfo?.globals_snapshot}
-                callStack={studio.currentStepInfo?.call_stack}
-                metadata={studio.currentStepInfo?.metadata}
-              />
-
+            <ExecutionResultPanel
+              execution={studio.execution}
+              requestError={studio.requestError}
+              currentStepInfo={studio.currentStepInfo}
+              stepIndex={studio.stepIndex}
+              totalSteps={studio.totalSteps}
+              isPlaying={studio.isPlaying}
+              playbackSpeed={studio.playbackSpeed}
+              visualizationMode={studio.visualizationMode}
+              language={studio.language}
+              onTogglePlay={studio.togglePlay}
+              onPrev={studio.stepPrev}
+              onNext={studio.stepNext}
+              onReset={studio.stepReset}
+              onJumpToEnd={studio.stepEnd}
+              onSeek={studio.seekStep}
+              onPlaybackSpeedChange={studio.setPlaybackSpeed}
+              showStdout={false}
+              stdoutTitle="실행 stdout"
+              stdoutEmptyText="실행 전입니다."
+            >
               <Card>
                 <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">문제 태그</h4>
                 <div className="flex flex-wrap gap-2">
@@ -475,94 +505,11 @@ export function ExamCenter() {
                 </div>
               </Card>
 
-              <Card>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-muted">채점 결과</h4>
-                    {currentSubmission ? (
-                      <p className="mt-2 text-sm text-ink-secondary">
-                        {currentSubmission.passedCount}/{currentSubmission.totalCount} 테스트 통과 · 점수 {currentSubmission.score}점
-                      </p>
-                    ) : (
-                      <p className="mt-2 text-sm text-ink-secondary">아직 채점 전입니다.</p>
-                    )}
-                  </div>
-                  {currentSubmission && (
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                        currentSubmission.status === 'passed'
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : currentSubmission.status === 'failed'
-                            ? 'bg-amber-50 text-amber-600'
-                            : 'bg-rose-50 text-rose-600'
-                      }`}
-                    >
-                      {currentSubmission.status === 'passed'
-                        ? '통과'
-                        : currentSubmission.status === 'failed'
-                          ? '미통과'
-                          : currentSubmission.status === 'timeout'
-                            ? '시간 초과'
-                            : '오류'}
-                    </span>
-                  )}
-                </div>
-
-                {submissionError && (
-                  <p className="mt-3 text-sm text-rose-600">{submissionError}</p>
-                )}
-
-                {currentSubmission?.errorMessage && (
-                  <p className="mt-3 text-sm text-rose-600">{currentSubmission.errorMessage}</p>
-                )}
-
-                {currentSubmission && currentSubmission.results.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {currentSubmission.results.map((result) => (
-                      <div
-                        key={result.caseId}
-                        className="rounded-2xl border border-surface-border bg-surface-soft px-4 py-3"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm font-medium text-ink">{result.caseId}</span>
-                          <span
-                            className={`text-xs font-medium ${
-                              result.passed ? 'text-emerald-600' : 'text-rose-600'
-                            }`}
-                          >
-                            {result.passed ? '통과' : '실패'}
-                          </span>
-                        </div>
-                        <p className="mt-2 text-xs text-ink-muted">{result.inputSummary}</p>
-                        <p className="mt-2 text-sm text-ink-secondary">{result.message}</p>
-                        {!result.passed && (
-                          <div className="mt-3 grid gap-2 md:grid-cols-2">
-                            <div className="rounded-xl bg-white px-3 py-2">
-                              <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
-                                예상값
-                              </p>
-                              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-xs text-ink-secondary">
-                                {formatValue(result.expected)}
-                              </pre>
-                            </div>
-                            <div className="rounded-xl bg-white px-3 py-2">
-                              <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
-                                실제값
-                              </p>
-                              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-xs text-ink-secondary">
-                                {formatValue(result.actual)}
-                              </pre>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-
-              <StdoutPanel stdoutSnapshot={studio.currentStepInfo?.stdout_snapshot} execution={studio.execution} />
-            </div>
+              <GradingResultCard
+                submission={currentSubmission}
+                submissionError={submissionError}
+              />
+            </ExecutionResultPanel>
           </div>
         </div>
       )}

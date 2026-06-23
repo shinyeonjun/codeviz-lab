@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.modules.executions.application.dependencies import get_trace_runner
@@ -11,7 +11,6 @@ from app.common.responses import success_response
 from app.core.database import get_db_session
 from app.modules.exams.application.services.exam_service import (
     ExamService,
-    get_exam_service,
 )
 from app.modules.exams.domain.exceptions import (
     ExamAssessmentNotConfiguredError,
@@ -26,8 +25,17 @@ from app.modules.exams.presentation.http.schemas import (
     ExamSessionCreate,
     ExamSessionRead,
 )
+from app.modules.learning.infrastructure.persistence.repository import LearningProgressRepository
 
 router = APIRouter()
+
+
+def get_exam_service(
+    session: Session = Depends(get_db_session),
+) -> ExamService:
+    return ExamService(
+        progress_repository=LearningProgressRepository(session=session),
+    )
 
 
 def get_exam_grading_service(
@@ -45,10 +53,14 @@ def get_exam_attempt_repository(
 
 @router.get("/categories")
 def read_exam_categories(
-    _: AuthContext = Depends(get_required_auth_context),
+    language: str | None = Query(default=None),
+    auth_context: AuthContext = Depends(get_required_auth_context),
     service: ExamService = Depends(get_exam_service),
 ) -> dict[str, object]:
-    categories: list[ExamCategoryRead] = service.get_categories()
+    categories: list[ExamCategoryRead] = service.get_categories(
+        user_id=auth_context.user.id,
+        language=language,
+    )
     return success_response(
         [category.model_dump(mode="json", by_alias=True) for category in categories],
         meta={"total": len(categories)},
@@ -58,13 +70,15 @@ def read_exam_categories(
 @router.post("/sessions", status_code=201)
 def create_exam_session(
     payload: ExamSessionCreate,
-    _: AuthContext = Depends(get_required_auth_context),
+    auth_context: AuthContext = Depends(get_required_auth_context),
     service: ExamService = Depends(get_exam_service),
 ) -> dict[str, object]:
     try:
         session: ExamSessionRead = service.create_session(
+            user_id=auth_context.user.id,
             category_id=payload.category_id,
             question_count=payload.question_count,
+            language=payload.language,
         )
     except ExamCategoryNotFoundError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
@@ -83,6 +97,7 @@ def submit_exam_answer(
         submission: ExamSubmissionRead = service.grade_submission(
             lesson_id=payload.lesson_id,
             source_code=payload.source_code,
+            language=payload.language,
         )
     except ExecutionInputLimitError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error

@@ -1,4 +1,5 @@
 from app.modules.executions.presentation.http.schemas import (
+    ExecutionAnalysisRead,
     ExecutionCreate,
     ExecutionFrameRead,
     ExecutionRead,
@@ -9,6 +10,7 @@ from app.modules.executions.presentation.http.schemas import (
 
 __all__ = [
     "ExecutionCreate",
+    "ExecutionAnalysisRead",
     "ExecutionFrameRead",
     "ExecutionRead",
     "ExecutionStepRead",

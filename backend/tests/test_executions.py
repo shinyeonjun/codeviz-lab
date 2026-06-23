@@ -2,6 +2,10 @@ import shutil
 
 import pytest
 
+from app.modules.executions.infrastructure.runners.languages.java.java_execute_runner import (
+    find_jdb_executable,
+)
+
 
 def test_create_and_read_execution(authenticated_client):
     source_code = "\n".join(
@@ -105,6 +109,50 @@ def test_create_execution_accepts_auto_visualization_mode(authenticated_client):
     assert payload["visualization"]["kind"] == "array-bars"
 
 
+@pytest.mark.parametrize(
+    ("selected_language", "source_code", "expected_detected_label"),
+    [
+        (
+            "python",
+            "public class Main { public static void main(String[] args) { System.out.println(1); } }",
+            "Java",
+        ),
+        (
+            "java",
+            "def solve(value):\n    return value + 1\n",
+            "Python",
+        ),
+        (
+            "c",
+            "public class Main { public static void main(String[] args) { System.out.println(1); } }",
+            "Java",
+        ),
+    ],
+)
+def test_create_execution_returns_friendly_message_for_language_mismatch(
+    authenticated_client,
+    selected_language,
+    source_code,
+    expected_detected_label,
+):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": selected_language,
+            "source_code": source_code,
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["status"] == "failed"
+    assert payload["step_count"] == 0
+    assert f"{expected_detected_label} 코드로 보입니다" in payload["error_message"]
+    assert "언어 선택" in payload["error_message"]
+
+
 def test_create_execution_with_array_bars_handles_user_defined_variable_name(authenticated_client):
     response = authenticated_client.post(
         "/api/v1/executions",
@@ -149,6 +197,131 @@ def test_create_execution_with_array_cells_returns_cell_payload(authenticated_cl
     assert payload["visualization"]["kind"] == "array-cells"
     assert payload["visualization"]["sourceVariable"] == "tokens"
     assert payload["visualization"]["stepStates"][0]["payload"]["items"] == ["A", "B", "C"]
+
+
+def test_create_execution_with_scalar_updates_auto_returns_cell_payload(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "value = 2\n"
+                "value = value + 5\n"
+                "value = value * 2\n"
+                "print(value)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["stdout"] == "14\n"
+    assert payload["visualizationMode"] in {"array-bars", "array-cells"}
+    assert payload["visualization"]["kind"] == payload["visualizationMode"]
+    assert payload["visualization"]["sourceVariable"] == "value"
+    assert payload["visualization"]["stepStates"][-1]["payload"]["items"] == [14]
+
+
+def test_create_execution_with_flowchart_returns_control_flow_payload(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "total = 0\n"
+                "for number in [1, 2, 3]:\n"
+                "    total += number\n"
+                "if total > 3:\n"
+                "    print(total)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "flowchart",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["visualizationMode"] == "flowchart"
+    assert payload["visualization"]["kind"] == "flowchart"
+    first_state = payload["visualization"]["stepStates"][0]["payload"]
+    assert any(node["type"] == "loop" for node in first_state["nodes"])
+    assert any(node["type"] == "branch" for node in first_state["nodes"])
+    assert any(edge["from"] == "start" for edge in first_state["edges"])
+    assert any(edge.get("label") == "YES" for edge in first_state["edges"])
+    assert any(edge.get("label") == "NO" for edge in first_state["edges"])
+    assert any(edge.get("label") == "반복" for edge in first_state["edges"])
+
+
+def test_create_execution_auto_prefers_state_visualization_for_basic_if(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "score = 72\n"
+                "passed = False\n"
+                "if score >= 60:\n"
+                "    passed = True\n"
+                "print(passed)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["visualizationMode"] == "array-cells"
+    assert payload["visualization"]["kind"] == "array-cells"
+
+
+def test_create_execution_flowchart_marks_comparison_expression_as_branch(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "value = 3\n"
+                "is_big = value > 1\n"
+                "print(is_big)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "flowchart",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    first_state = payload["visualization"]["stepStates"][0]["payload"]
+    comparison_node = next(
+        node for node in first_state["nodes"] if node.get("lineNumber") == 2
+    )
+    assert comparison_node["type"] == "branch"
+
+
+def test_create_execution_auto_prefers_array_visualization_for_array_control_flow(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "python",
+            "source_code": (
+                "numbers = [3, 1, 2]\n"
+                "for i in range(len(numbers)):\n"
+                "    if numbers[i] > 1:\n"
+                "        numbers[i] = numbers[i] * 2\n"
+                "print(numbers)\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["visualizationMode"] == "array-bars"
+    assert payload["visualization"]["kind"] == "array-bars"
 
 
 def test_create_execution_with_palindrome_pointers_returns_pointer_payload(authenticated_client):
@@ -519,7 +692,7 @@ def test_create_execution_with_c_code_returns_trace_when_gdb_is_available(authen
 
 @pytest.mark.skipif(
     shutil.which("gcc") is None or shutil.which("gdb") is None,
-    reason="gcc/gdb媛 ?녿뒗 ?섍꼍?먯꽌??C global trace ?뚯뒪?몃? 嫄대꼫?곷땲??",
+    reason="gcc/gdb가 없는 환경에서는 C global trace 테스트를 건너뜁니다.",
 )
 def test_create_execution_with_c_global_matrix_supports_dp_table_visualization(authenticated_client):
     response = authenticated_client.post(
@@ -549,3 +722,73 @@ def test_create_execution_with_c_global_matrix_supports_dp_table_visualization(a
     assert any("matrix" in step["globals_snapshot"] for step in payload["steps"])
     assert payload["visualizationMode"] == "dp-table"
     assert payload["visualization"]["kind"] == "dp-table"
+
+
+@pytest.mark.skipif(
+    shutil.which("javac") is None or shutil.which("java") is None or find_jdb_executable() is None,
+    reason="javac/java가 없는 환경에서는 Java 실행 테스트를 건너뜁니다.",
+)
+def test_create_execution_with_java_scalar_code_returns_output_and_visualization(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "java",
+            "source_code": (
+                "public class Main {\n"
+                "    public static void main(String[] args) {\n"
+                "        int a = 2;\n"
+                "        int b = 4;\n"
+                "        System.out.println(a + b);\n"
+                "    }\n"
+                "}\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["language"] == "java"
+    assert payload["status"] == "completed"
+    assert payload["stdout"] == "6\n"
+    assert payload["visualizationMode"] in {"none", "array-cells"}
+    if payload["visualizationMode"] == "array-cells":
+        assert payload["visualization"]["kind"] == "array-cells"
+    else:
+        assert payload["visualization"] is None
+    assert payload["step_count"] > 0
+
+
+@pytest.mark.skipif(
+    shutil.which("javac") is None or shutil.which("java") is None or find_jdb_executable() is None,
+    reason="javac/java가 없는 환경에서는 Java 실행 테스트를 건너뜁니다.",
+)
+def test_create_execution_with_java_auto_array_uses_trace_visualization(authenticated_client):
+    response = authenticated_client.post(
+        "/api/v1/executions",
+        json={
+            "language": "java",
+            "source_code": (
+                "public class Main {\n"
+                "    public static void main(String[] args) {\n"
+                "        int[] arr = {3, 1, 2};\n"
+                "        for (int i = 0; i < arr.length; i++) {\n"
+                "            System.out.println(arr[i]);\n"
+                "        }\n"
+                "    }\n"
+                "}\n"
+            ),
+            "stdin": "",
+            "visualizationMode": "auto",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()["data"]
+    assert payload["language"] == "java"
+    assert payload["status"] == "completed"
+    assert payload["stdout"] == "3\n1\n2\n"
+    assert payload["step_count"] > 0
+    assert payload["visualizationMode"] == "array-bars"
+    assert payload["visualization"]["kind"] == "array-bars"

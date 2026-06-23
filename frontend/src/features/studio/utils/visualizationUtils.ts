@@ -8,6 +8,9 @@ export type ScalarBadge = {
   value: unknown;
 };
 
+export const UNAVAILABLE_TRACE_VALUE = '<optimized out>';
+export const UNAVAILABLE_TRACE_LABEL = '아직 값 없음';
+
 export function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => String(item)) : [];
 }
@@ -102,11 +105,37 @@ export function asStringSet(value: unknown): Set<string> {
 }
 
 export function formatValue(value: unknown) {
-  if (typeof value === 'string') {
-    return value;
+  const normalizedValue = normalizeUnavailableTraceValues(value);
+
+  if (normalizedValue === UNAVAILABLE_TRACE_LABEL) {
+    return UNAVAILABLE_TRACE_LABEL;
   }
 
-  return JSON.stringify(value);
+  if (typeof normalizedValue === 'string') {
+    return normalizedValue;
+  }
+
+  return JSON.stringify(normalizedValue);
+}
+
+function normalizeUnavailableTraceValues(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value.includes(UNAVAILABLE_TRACE_VALUE)
+      ? value.split(UNAVAILABLE_TRACE_VALUE).join(UNAVAILABLE_TRACE_LABEL)
+      : value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeUnavailableTraceValues(item));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, normalizeUnavailableTraceValues(item)]),
+    );
+  }
+
+  return value;
 }
 
 export function buildPointerMap(pointers: PointerDetail[]) {

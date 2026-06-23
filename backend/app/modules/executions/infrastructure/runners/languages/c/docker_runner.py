@@ -52,7 +52,7 @@ class DockerCExecutionRunner:
                 docker_command,
                 input=payload,
                 capture_output=True,
-                timeout=self._timeout_seconds + 4,
+                timeout=self._container_timeout_seconds(),
                 check=False,
             )
         except subprocess.TimeoutExpired:
@@ -75,6 +75,9 @@ class DockerCExecutionRunner:
             stderr_text=stderr_text,
             invalid_payload_message="Docker C 실행 결과를 해석하지 못했습니다.",
         )
+
+    def _container_timeout_seconds(self) -> int:
+        return self._timeout_seconds * 2 + 15
 
     def _build_command(self, *, container_name: str) -> list[str]:
         return [

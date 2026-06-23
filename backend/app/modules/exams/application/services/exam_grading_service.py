@@ -1,14 +1,16 @@
 import json
 
 from app.common.text_validation import ensure_utf8_encodable
-from app.modules.executions.domain.exceptions import ExecutionInputLimitError
-from app.modules.executions.domain.ports import TraceRunnerProtocol
-from app.modules.executions.domain.trace import TraceExecutionCommand
+from app.core.config import settings
 from app.modules.exams.application.services.exam_service import ExamService
 from app.modules.exams.presentation.http.schemas import (
     ExamCaseResultRead,
     ExamSubmissionRead,
 )
+from app.modules.executions.domain.exceptions import ExecutionInputLimitError
+from app.modules.executions.domain.ports import TraceRunnerProtocol
+from app.modules.executions.domain.trace import TraceExecutionCommand
+from app.modules.executions.shared.language_detection import get_language_mismatch_message
 
 
 class ExamGradingService:
@@ -21,7 +23,16 @@ class ExamGradingService:
         self._exam_service = exam_service
         self._runner = runner
 
-    def grade_submission(self, *, lesson_id: str, source_code: str) -> ExamSubmissionRead:
+    def grade_submission(
+        self,
+        *,
+        lesson_id: str,
+        source_code: str,
+        language: str = "python",
+    ) -> ExamSubmissionRead:
+        if len(source_code) > settings.runner_max_source_code_chars:
+            raise ExecutionInputLimitError("제출 코드 길이가 허용 범위를 초과했습니다.")
+
         try:
             ensure_utf8_encodable(source_code, field_label="제출 코드")
         except ValueError as error:
@@ -30,13 +41,45 @@ class ExamGradingService:
         assessment = self._exam_service.get_assessment_definition(lesson_id)
         test_cases = assessment["test_cases"]
 
+        language_mismatch_message = get_language_mismatch_message(
+            selected_language=language,
+            source_code=source_code,
+        )
+        if language_mismatch_message is not None:
+            return ExamSubmissionRead(
+                lesson_id=lesson_id,
+                question_id=str(assessment["question_id"]),
+                status="error",
+                score=0,
+                passed_count=0,
+                total_count=len(test_cases),
+                error_message=language_mismatch_message,
+                results=[],
+            )
+
+        if language != "python":
+            return ExamSubmissionRead(
+                lesson_id=lesson_id,
+                question_id=str(assessment["question_id"]),
+                status="error",
+                score=0,
+                passed_count=0,
+                total_count=len(test_cases),
+                error_message=(
+                    "현재 시험 채점은 Python 함수형 답안만 지원합니다. "
+                    "C/Java 코드는 실행 추적에서 검증하세요."
+                ),
+                results=[],
+            )
+
         execution_result = self._runner.run(
             TraceExecutionCommand(
-                language="python",
+                language=language,
                 source_code=self._build_grading_script(
                     source_code=source_code,
                     function_name=str(assessment["function_name"]),
                     test_cases=test_cases,
+                    max_stdout_chars=settings.runner_max_stdout_chars,
                 ),
                 stdin="",
             )
@@ -62,7 +105,11 @@ class ExamGradingService:
                 score=0,
                 passed_count=0,
                 total_count=len(test_cases),
-                error_message=execution_result.error_message or execution_result.stderr or "채점에 실패했습니다.",
+                error_message=(
+                    execution_result.error_message
+                    or execution_result.stderr
+                    or "채점에 실패했습니다."
+                ),
                 results=[],
             )
 
@@ -105,6 +152,7 @@ class ExamGradingService:
         source_code: str,
         function_name: str,
         test_cases: list[dict[str, object]],
+        max_stdout_chars: int,
     ) -> str:
         return f"""
 import contextlib
@@ -115,6 +163,31 @@ import json
 USER_SOURCE = {source_code!r}
 FUNCTION_NAME = {function_name!r}
 TEST_CASES = {test_cases!r}
+MAX_STDOUT_CHARS = {max_stdout_chars!r}
+
+
+class BoundedStdout(io.TextIOBase):
+    def __init__(self, max_chars):
+        self._max_chars = max_chars
+        self._buffer = io.StringIO()
+        self.truncated = False
+
+    def write(self, data):
+        if self.truncated:
+            return len(data)
+
+        remaining = self._max_chars - self._buffer.tell()
+        if remaining <= 0:
+            self.truncated = True
+            return len(data)
+
+        self._buffer.write(data[:remaining])
+        if len(data) > remaining:
+            self.truncated = True
+        return len(data)
+
+    def getvalue(self):
+        return self._buffer.getvalue()
 
 
 def normalize(value):
@@ -136,7 +209,7 @@ def print_result(payload):
 
 
 namespace = {{}}
-bootstrap_stdout = io.StringIO()
+bootstrap_stdout = BoundedStdout(MAX_STDOUT_CHARS)
 
 try:
     with contextlib.redirect_stdout(bootstrap_stdout):
@@ -160,7 +233,7 @@ if not callable(target):
             "status": "error",
             "passedCount": 0,
             "totalCount": len(TEST_CASES),
-            "errorMessage": f"함수 '{{FUNCTION_NAME}}'를 찾지 못했습니다.",
+            "errorMessage": f"함수 '{{FUNCTION_NAME}}'를 찾을 수 없습니다.",
             "results": [],
         }}
     )
@@ -177,7 +250,7 @@ for case in TEST_CASES:
     input_summary = f"args={{raw_args}}, kwargs={{raw_kwargs}}"
     expected = normalize(case.get("expected"))
     expected_stdout = case.get("expected_stdout")
-    captured_stdout = io.StringIO()
+    captured_stdout = BoundedStdout(MAX_STDOUT_CHARS)
 
     try:
         with contextlib.redirect_stdout(captured_stdout):
@@ -189,14 +262,17 @@ for case in TEST_CASES:
 
     actual = normalize(actual_value)
     actual_stdout = captured_stdout.getvalue()
-    passed = actual_error is None and actual == expected
+    stdout_truncated = captured_stdout.truncated
+    passed = actual_error is None and actual == expected and not stdout_truncated
 
     if expected_stdout is not None:
-        passed = passed and actual_stdout == expected_stdout
+        passed = passed and not stdout_truncated and actual_stdout == expected_stdout
 
     if passed:
         message = "통과"
         passed_count += 1
+    elif stdout_truncated:
+        message = "stdout 출력이 제한 길이를 초과해 잘렸습니다."
     elif actual_error is not None:
         message = actual_error
     else:

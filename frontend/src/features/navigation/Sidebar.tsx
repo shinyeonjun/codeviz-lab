@@ -63,15 +63,15 @@ export function Sidebar({
     >
       <div className="flex items-center gap-3 px-4 py-5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-xs font-bold text-white">
-          L
+          C
         </div>
-        {!collapsed && <span className="truncate text-sm font-semibold text-white">코드 렌즈</span>}
+        {!collapsed && <span className="truncate text-sm font-semibold text-white">CodeViz</span>}
       </div>
 
       <nav className="mt-1 space-y-0.5 px-2">
         <NavItem
           icon={<LayoutGrid size={16} />}
-          label="학습 홈"
+          label="학습"
           active={currentView === 'home'}
           collapsed={collapsed}
           onClick={() => onChangeView('home')}

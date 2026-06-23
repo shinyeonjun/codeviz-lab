@@ -36,7 +36,7 @@ class LocalCExecutionRunner:
                 [sys.executable, str(RUNNER_SCRIPT_PATH)],
                 input=encode_runner_payload(source_code=command.source_code, stdin=command.stdin),
                 capture_output=True,
-                timeout=self._timeout_seconds + 3,
+                timeout=self._script_timeout_seconds(),
                 check=False,
                 env={
                     **os.environ,
@@ -64,3 +64,6 @@ class LocalCExecutionRunner:
             stderr_text=stderr_text,
             invalid_payload_message="C 실행 결과를 해석하지 못했습니다.",
         )
+
+    def _script_timeout_seconds(self) -> int:
+        return self._timeout_seconds * 2 + 10

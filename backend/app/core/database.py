@@ -26,6 +26,7 @@ def create_database() -> None:
     from app.modules.auth.infrastructure.persistence import models  # noqa: F401
     from app.modules.exams.infrastructure.persistence import models as exam_models  # noqa: F401
     from app.modules.executions.infrastructure.persistence import models  # noqa: F401
+    from app.modules.learning.infrastructure.persistence import models as learning_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
     _apply_manual_migrations()

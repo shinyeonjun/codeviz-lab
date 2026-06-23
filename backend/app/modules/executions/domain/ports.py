@@ -27,5 +27,9 @@ class ExecutionRepositoryProtocol(Protocol):
 
 
 class ExecutionVisualizerProtocol(Protocol):
+    @property
+    def supported_modes(self) -> set[str]:
+        ...
+
     def build(self, execution: ExecutionRead) -> ExecutionVisualizationRead | None:
         ...

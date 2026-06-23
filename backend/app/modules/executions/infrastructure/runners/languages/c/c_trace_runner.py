@@ -185,7 +185,7 @@ def _collect_global_names_from_statement(statement: str, global_names: list[str]
     if stripped.startswith(("typedef ", "struct ", "enum ", "union ")):
         return
 
-    declaration_parts = [part.strip() for part in stripped.split(",")]
+    declaration_parts = _split_c_declarators(stripped)
     for part in declaration_parts:
         match = re.search(r"([A-Za-z_]\w*)\s*(?:\[[^\]]*\])*\s*(?:=\s*.+)?$", part)
         if match is None:
@@ -193,6 +193,30 @@ def _collect_global_names_from_statement(statement: str, global_names: list[str]
         candidate = match.group(1)
         if candidate not in global_names:
             global_names.append(candidate)
+
+
+def _split_c_declarators(statement: str) -> list[str]:
+    parts: list[str] = []
+    current: list[str] = []
+    depth = 0
+
+    for char in statement:
+        if char in "([{":
+            depth += 1
+        elif char in ")]}" and depth > 0:
+            depth -= 1
+        elif char == "," and depth == 0:
+            part = "".join(current).strip()
+            if part:
+                parts.append(part)
+            current = []
+            continue
+        current.append(char)
+
+    part = "".join(current).strip()
+    if part:
+        parts.append(part)
+    return parts
 
 
 def build_gdb_script(
@@ -215,8 +239,9 @@ def build_gdb_script(
         set confirm off
         set breakpoint pending on
         set print repeats 20
-        set print elements 20
+        set print elements 512
         set print pretty off
+        set print entry-values no
         python
         import json
         import pathlib
@@ -239,6 +264,7 @@ def build_gdb_script(
 
         INT_PATTERN = re.compile(r"^-?\\d+$")
         FLOAT_PATTERN = re.compile(r"^-?(?:\\d+\\.\\d*|\\d*\\.\\d+)(?:[eE][+-]?\\d+)?$")
+        UNAVAILABLE_TRACE_VALUE = "<optimized out>"
 
 
         def to_safe_text(value):
@@ -298,6 +324,9 @@ def build_gdb_script(
             if not value:
                 return ""
 
+            if UNAVAILABLE_TRACE_VALUE in value:
+                return UNAVAILABLE_TRACE_VALUE
+
             if value.startswith('"') and value.endswith('"'):
                 return to_safe_text(value[1:-1])
 
@@ -324,6 +353,10 @@ def build_gdb_script(
             return to_safe_text(value)
 
 
+        def is_unavailable_trace_value(value):
+            return isinstance(value, str) and UNAVAILABLE_TRACE_VALUE in value
+
+
         def parse_locals_output(text):
             locals_snapshot = {{}}
             for raw_line in text.splitlines():
@@ -335,7 +368,10 @@ def build_gdb_script(
                 if " = " not in line:
                     continue
                 name, value = line.split(" = ", 1)
-                locals_snapshot[to_safe_text(name.strip())] = parse_value(value)
+                parsed_value = parse_value(value)
+                if is_unavailable_trace_value(parsed_value):
+                    continue
+                locals_snapshot[to_safe_text(name.strip())] = parsed_value
             return locals_snapshot
 
 
@@ -376,7 +412,7 @@ def build_gdb_script(
                 except gdb.error:
                     continue
                 parsed_value = parse_print_output(printed)
-                if parsed_value is None:
+                if parsed_value is None or is_unavailable_trace_value(parsed_value):
                     continue
                 globals_snapshot[to_safe_text(name)] = parsed_value
             return globals_snapshot

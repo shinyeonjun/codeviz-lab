@@ -2,6 +2,8 @@ import { ChevronLeft, ChevronRight, Pause, Play, SkipBack, SkipForward } from 'l
 import { Button } from '../../../components/ui/Button';
 
 const SPEED_OPTIONS = [
+  { value: 0.25, label: '0.25x' },
+  { value: 0.5, label: '0.5x' },
   { value: 1, label: '1x' },
   { value: 2, label: '2x' },
   { value: 4, label: '4x' },
@@ -43,7 +45,12 @@ export function PlaybackControls({
     <div className="rounded-2xl border border-surface-border bg-white px-4 py-3">
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
-          <Button variant={isPlaying ? 'outline' : 'primary'} onClick={onTogglePlay} disabled={!canControl}>
+          <Button
+            variant={isPlaying ? 'outline' : 'primary'}
+            className="shrink-0"
+            onClick={onTogglePlay}
+            disabled={!canControl}
+          >
             {isPlaying ? (
               <>
                 <Pause size={14} />
@@ -56,19 +63,39 @@ export function PlaybackControls({
               </>
             )}
           </Button>
-          <Button variant="outline" onClick={onPrev} disabled={!canControl || stepIndex <= 0}>
-            <ChevronLeft size={14} />
-          </Button>
-          <Button variant="outline" onClick={onNext} disabled={!canControl || stepIndex >= totalSteps - 1}>
-            <ChevronRight size={14} />
-          </Button>
-          <Button variant="outline" onClick={onReset} disabled={!canControl || stepIndex <= 0}>
+          <Button
+            variant="outline"
+            className="shrink-0 px-3"
+            onClick={onReset}
+            disabled={!canControl || stepIndex <= 0}
+            title="처음으로"
+          >
             <SkipBack size={14} />
           </Button>
           <Button
             variant="outline"
+            className="shrink-0 px-3"
+            onClick={onPrev}
+            disabled={!canControl || stepIndex <= 0}
+            title="이전 단계"
+          >
+            <ChevronLeft size={14} />
+          </Button>
+          <Button
+            variant="outline"
+            className="shrink-0 px-3"
+            onClick={onNext}
+            disabled={!canControl || stepIndex >= totalSteps - 1}
+            title="다음 단계"
+          >
+            <ChevronRight size={14} />
+          </Button>
+          <Button
+            variant="outline"
+            className="shrink-0 px-3"
             onClick={onJumpToEnd}
             disabled={!canControl || totalSteps === 0 || stepIndex >= totalSteps - 1}
+            title="마지막으로"
           >
             <SkipForward size={14} />
           </Button>

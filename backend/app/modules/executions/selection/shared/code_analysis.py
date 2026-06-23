@@ -6,7 +6,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 
-SUPPORTED_ANALYSIS_LANGUAGES = {"python", "c"}
+SUPPORTED_ANALYSIS_LANGUAGES = {"python", "c", "java"}
 
 
 @dataclass(slots=True)
@@ -27,6 +27,8 @@ def analyze_source_code(
         return _analyze_python_source(source_code=source_code, supported_modes=supported_modes)
     if language == "c":
         return _analyze_c_source(source_code=source_code, supported_modes=supported_modes)
+    if language == "java":
+        return _analyze_java_source(source_code=source_code, supported_modes=supported_modes)
 
     return CodeAnalysisSnapshot(
         language=language,
@@ -223,14 +225,91 @@ def _analyze_c_source(
     )
 
 
+def _analyze_java_source(
+    *,
+    source_code: str,
+    supported_modes: set[str],
+) -> CodeAnalysisSnapshot:
+    sanitized = _strip_c_comments(source_code)
+    method_names = _find_java_method_names(sanitized)
+    for_count = len(re.findall(r"\bfor\s*\(", sanitized))
+    while_count = len(re.findall(r"\bwhile\s*\(", sanitized))
+    array_names = _find_java_array_names(sanitized)
+    matrix_names = _find_java_matrix_names(sanitized)
+    queue_cues = _find_named_cues(sanitized, {"queue", "offer", "poll", "peek", "ArrayDeque", "LinkedList"})
+    stack_cues = _find_named_cues(sanitized, {"stack", "push", "pop", "peek", "Deque"})
+    graph_cues = _find_named_cues(sanitized, {"graph", "adj", "visited", "neighbor"})
+    tree_cues = _find_named_cues(sanitized, {"left", "right", "node", "root"})
+    recursive_methods = [
+        name for name in method_names if re.search(rf"\b{name}\s*\(", _function_body(sanitized, name))
+    ]
+    has_print = "System.out.print" in sanitized
+
+    summary_lines = [f"메서드 {len(method_names)}개, for {for_count}개, while {while_count}개"]
+    detected_structures: list[str] = []
+
+    if method_names:
+        summary_lines.append(f"메서드 후보: {', '.join(method_names)}")
+    if recursive_methods:
+        summary_lines.append(f"재귀 메서드 후보: {', '.join(sorted(set(recursive_methods)))}")
+        detected_structures.append("recursion")
+    if array_names:
+        summary_lines.append(f"배열 후보: {', '.join(array_names)}")
+        detected_structures.append("array")
+    if matrix_names:
+        summary_lines.append(f"2차원 배열 후보: {', '.join(matrix_names)}")
+        detected_structures.append("matrix")
+    if stack_cues:
+        summary_lines.append(f"스택 단서: {', '.join(stack_cues)}")
+        detected_structures.append("stack")
+    if queue_cues:
+        summary_lines.append(f"큐 단서: {', '.join(queue_cues)}")
+        detected_structures.append("queue")
+    if graph_cues:
+        summary_lines.append(f"그래프 단서: {', '.join(graph_cues)}")
+        detected_structures.append("graph")
+    if tree_cues:
+        summary_lines.append(f"트리 단서: {', '.join(tree_cues)}")
+        detected_structures.append("tree")
+    if has_print:
+        summary_lines.append("표준 출력 호출이 포함됨")
+    summary_lines.append("Java도 Python/C와 같은 템플릿 체계에서 자료구조와 제어 흐름을 우선 선택")
+
+    suggested_mode = _detect_java_mode(source_code=sanitized, supported_modes=supported_modes)
+    return CodeAnalysisSnapshot(
+        language="java",
+        summary_lines=summary_lines,
+        suggested_mode=suggested_mode,
+        detected_structures=sorted(set(detected_structures)),
+    )
+
+
 def _detect_python_mode(*, tree: ast.AST, supported_modes: set[str]) -> str | None:
     return (
-        _detect_python_graph_mode(tree, supported_modes)
+        _detect_python_hybrid_mode(tree, supported_modes)
+        or _detect_python_graph_mode(tree, supported_modes)
         or _detect_python_dp_mode(tree)
         or _detect_python_call_stack_mode(tree)
         or _detect_python_queue_or_stack_mode(tree)
         or _detect_python_array_mode(tree)
+        or _detect_python_control_flow_mode(tree, supported_modes)
     )
+
+
+def _detect_python_hybrid_mode(tree: ast.AST, supported_modes: set[str]) -> str | None:
+    if "hybrid" not in supported_modes:
+        return None
+    has_control_flow = _detect_python_control_flow_mode(tree, {"flowchart"}) == "flowchart"
+    has_structure = any(
+        detector is not None
+        for detector in (
+            _detect_python_graph_mode(tree, supported_modes),
+            _detect_python_dp_mode(tree),
+            _detect_python_queue_or_stack_mode(tree),
+            _detect_python_array_mode(tree),
+        )
+    )
+    return "hybrid" if has_control_flow and has_structure else None
 
 
 def _detect_python_graph_mode(tree: ast.AST, supported_modes: set[str]) -> str | None:
@@ -328,11 +407,12 @@ def _detect_python_array_mode(tree: ast.AST) -> str | None:
     has_subscript_assignment = False
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.List) and node.elts and all(
-            isinstance(element, ast.Constant) and isinstance(element.value, (int, float))
-            for element in node.elts
-        ):
-            has_numeric_sequence = True
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.List):
+            if node.value.elts and all(
+                isinstance(element, ast.Constant) and isinstance(element.value, (int, float))
+                for element in node.value.elts
+            ):
+                has_numeric_sequence = True
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "sort":
             has_sort_call = True
         if isinstance(node, ast.Assign) and any(isinstance(target, ast.Subscript) for target in node.targets):
@@ -345,7 +425,16 @@ def _detect_python_array_mode(tree: ast.AST) -> str | None:
     return None
 
 
+def _detect_python_control_flow_mode(tree: ast.AST, supported_modes: set[str]) -> str | None:
+    if "flowchart" not in supported_modes:
+        return None
+    has_control_flow = any(isinstance(node, (ast.For, ast.While, ast.If)) for node in ast.walk(tree))
+    return "flowchart" if has_control_flow else None
+
+
 def _detect_c_mode(*, source_code: str, supported_modes: set[str]) -> str | None:
+    if _looks_like_control_flow(source_code) and _looks_like_c_structure(source_code) and "hybrid" in supported_modes:
+        return "hybrid"
     if _looks_like_c_graph_bfs(source_code):
         return "graph-bfs-traversal" if "graph-bfs-traversal" in supported_modes else "graph-node-edge"
     if _looks_like_c_graph_dfs(source_code):
@@ -360,7 +449,103 @@ def _detect_c_mode(*, source_code: str, supported_modes: set[str]) -> str | None
         return "stack-vertical"
     if _looks_like_c_numeric_array(source_code):
         return "array-bars"
+    if _looks_like_control_flow(source_code) and "flowchart" in supported_modes:
+        return "flowchart"
     return None
+
+
+def _detect_java_mode(*, source_code: str, supported_modes: set[str]) -> str | None:
+    if _looks_like_control_flow(source_code) and _looks_like_java_structure(source_code) and "hybrid" in supported_modes:
+        return "hybrid"
+    if _looks_like_java_graph_bfs(source_code):
+        return "graph-bfs-traversal" if "graph-bfs-traversal" in supported_modes else "graph-node-edge"
+    if _looks_like_java_graph_dfs(source_code):
+        return "graph-dfs-traversal" if "graph-dfs-traversal" in supported_modes else "graph-node-edge"
+    if _looks_like_java_dp(source_code):
+        return "dp-table"
+    if _looks_like_java_call_stack(source_code):
+        return "call-stack"
+    if _looks_like_java_queue(source_code):
+        return "queue-horizontal"
+    if _looks_like_java_stack(source_code):
+        return "stack-vertical"
+    if _looks_like_java_numeric_array(source_code):
+        return "array-bars"
+    if _looks_like_control_flow(source_code) and "flowchart" in supported_modes:
+        return "flowchart"
+    return None
+
+
+def _looks_like_control_flow(source_code: str) -> bool:
+    return bool(re.search(r"\b(?:if|else\s+if|for|while|switch)\s*\(", source_code))
+
+
+def _looks_like_c_structure(source_code: str) -> bool:
+    return any(
+        (
+            _looks_like_c_graph_bfs(source_code),
+            _looks_like_c_graph_dfs(source_code),
+            _looks_like_c_dp(source_code),
+            _looks_like_c_queue(source_code),
+            _looks_like_c_stack(source_code),
+            _looks_like_c_numeric_array(source_code),
+        )
+    )
+
+
+def _looks_like_java_structure(source_code: str) -> bool:
+    return any(
+        (
+            _looks_like_java_graph_bfs(source_code),
+            _looks_like_java_graph_dfs(source_code),
+            _looks_like_java_dp(source_code),
+            _looks_like_java_queue(source_code),
+            _looks_like_java_stack(source_code),
+            _looks_like_java_numeric_array(source_code),
+        )
+    )
+
+
+def _looks_like_java_graph_bfs(source_code: str) -> bool:
+    return (
+        bool(re.search(r"\bvisited\b", source_code))
+        and bool(re.search(r"\bQueue\b|\bArrayDeque\b|\bLinkedList\b|\bpoll\s*\(", source_code))
+        and bool(re.search(r"\bgraph\b|\badj\b|\bneighbor\b", source_code))
+    )
+
+
+def _looks_like_java_graph_dfs(source_code: str) -> bool:
+    return (
+        bool(re.search(r"\bvisited\b", source_code))
+        and bool(re.search(r"\bStack\b|\bDeque\b|\bdfs\s*\(", source_code))
+        and bool(re.search(r"\bgraph\b|\badj\b|\bneighbor\b", source_code))
+    )
+
+
+def _looks_like_java_dp(source_code: str) -> bool:
+    return bool(re.search(r"\w+\s*\[[^\]]*\]\s*\[[^\]]*\]", source_code)) or bool(
+        re.search(r"\b(?:int|long|double|float)\s*\[\]\s*\[\]\s+\w+", source_code)
+    )
+
+
+def _looks_like_java_call_stack(source_code: str) -> bool:
+    method_names = [name for name in _find_java_method_names(source_code) if name != "main"]
+    return len(method_names) >= 1
+
+
+def _looks_like_java_queue(source_code: str) -> bool:
+    return bool(re.search(r"\bQueue\b|\bArrayDeque\b|\bLinkedList\b|\boffer\s*\(|\bpoll\s*\(", source_code))
+
+
+def _looks_like_java_stack(source_code: str) -> bool:
+    return bool(re.search(r"\bStack\b|\bDeque\b|\bpush\s*\(|\bpop\s*\(", source_code))
+
+
+def _looks_like_java_numeric_array(source_code: str) -> bool:
+    return bool(
+        re.search(r"\b(?:int|long|short|float|double)\s*\[\]\s+\w+", source_code)
+        or re.search(r"\b(?:int|long|short|float|double)\s+\w+\s*\[\]", source_code)
+    )
 
 
 def _looks_like_c_graph_bfs(source_code: str) -> bool:
@@ -419,6 +604,32 @@ def _find_c_array_names(source_code: str) -> list[str]:
 def _find_c_matrix_names(source_code: str) -> list[str]:
     pattern = re.compile(r"\b(?:int|long|short|float|double|char)\s+(\w+)\s*\[[^\]]*\]\s*\[[^\]]*\]")
     return sorted(set(pattern.findall(source_code)))
+
+
+def _find_java_method_names(source_code: str) -> list[str]:
+    modifiers = r"(?:(?:public|private|protected|static|final|abstract|synchronized|native|strictfp)\s+)*"
+    return_type = (
+        r"(?:void|int|long|short|float|double|boolean|char|String|"
+        r"[A-Za-z_]\w*(?:\s*<[^;{}()]*>)?)"
+        r"(?:\s*\[\s*\])*"
+    )
+    pattern = re.compile(
+        rf"\b{modifiers}{return_type}\s+([A-Za-z_]\w*)\s*\([^;{{}}]*\)\s*\{{",
+    )
+    return pattern.findall(source_code)
+
+
+def _find_java_array_names(source_code: str) -> list[str]:
+    value_type = r"(?:int|long|short|float|double|char|boolean|String)"
+    leading_brackets = re.compile(rf"\b{value_type}\s*(?:\[\s*\])+\s+([A-Za-z_]\w*)\s*(?=[=;,])")
+    trailing_brackets = re.compile(rf"\b{value_type}\s+([A-Za-z_]\w*)\s*(?:\[\s*\])+\s*(?=[=;,])")
+    return sorted(set(leading_brackets.findall(source_code) + trailing_brackets.findall(source_code)))
+
+
+def _find_java_matrix_names(source_code: str) -> list[str]:
+    pattern = re.compile(r"\b(?:int|long|short|float|double|char|boolean|String)\s*\[\]\s*\[\]\s+(\w+)")
+    legacy_pattern = re.compile(r"\b(?:int|long|short|float|double|char|boolean|String)\s+(\w+)\s*\[\]\s*\[\]")
+    return sorted(set(pattern.findall(source_code) + legacy_pattern.findall(source_code)))
 
 
 def _find_named_cues(source_code: str, names: set[str]) -> list[str]:

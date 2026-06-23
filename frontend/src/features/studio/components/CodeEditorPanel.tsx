@@ -1,6 +1,7 @@
 import Editor from '@monaco-editor/react';
 
 import type { ExecutionLanguage } from '../../../types/execution';
+import { getMonacoLanguage } from '../utils/languageUtils';
 
 interface CodeEditorPanelProps {
   fileName: string;
@@ -17,6 +18,8 @@ export function CodeEditorPanel({
   onChange,
   editorRef,
 }: CodeEditorPanelProps) {
+  const monacoLanguage = getMonacoLanguage(language);
+
   return (
     <div className="overflow-hidden rounded-xl border border-surface-border">
       <div className="flex items-center gap-2 border-b border-surface-border bg-surface-soft px-4 py-2">
@@ -25,8 +28,8 @@ export function CodeEditorPanel({
       <div className="h-[500px]">
         <Editor
           height="100%"
-          language={language}
-          defaultLanguage={language}
+          language={monacoLanguage}
+          defaultLanguage={monacoLanguage}
           value={code}
           onChange={(value) => onChange(value || '')}
           theme="vs-dark"
@@ -34,6 +37,7 @@ export function CodeEditorPanel({
             editorRef.current = editor;
           }}
           options={{
+            automaticLayout: true,
             minimap: { enabled: false },
             fontSize: 14,
             lineHeight: 24,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -41,10 +41,12 @@ export function AuthModal({
     return null;
   }
 
-  const handleSubmit = async () => {
-    const ok = mode === 'login'
-      ? await onLogin({ email, password })
-      : await onRegister({ email, password, name });
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const ok =
+      mode === 'login'
+        ? await onLogin({ email, password })
+        : await onRegister({ email, password, name });
 
     if (ok) {
       onClose();
@@ -60,19 +62,22 @@ export function AuthModal({
               {mode === 'login' ? '로그인' : '회원가입'}
             </h3>
             <p className="mt-1 text-xs text-ink-muted">
-              {mode === 'login' ? '로그인 후 학습, 스튜디오, 시험을 이용할 수 있습니다.' : '계정을 만들고 학습 기록을 이어서 관리합니다.'}
+              {mode === 'login'
+                ? '로그인 후 학습, 스튜디오, 시험을 이용할 수 있습니다.'
+                : '계정을 만들고 학습 기록을 이어서 관리합니다.'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg p-1 text-ink-muted transition-colors hover:bg-surface-soft hover:text-ink"
+            aria-label="닫기"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="space-y-4 px-5 py-5">
+        <form className="space-y-4 px-5 py-5" onSubmit={(event) => void handleSubmit(event)}>
           {mode === 'register' && (
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-ink-muted">이름</span>
@@ -81,6 +86,8 @@ export function AuthModal({
                 onChange={(event) => setName(event.target.value)}
                 className="w-full rounded-xl border border-surface-border px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-accent/40"
                 placeholder="이름"
+                autoComplete="name"
+                required
               />
             </label>
           )}
@@ -88,10 +95,13 @@ export function AuthModal({
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-ink-muted">이메일</span>
             <input
+              type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="w-full rounded-xl border border-surface-border px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-accent/40"
               placeholder="you@example.com"
+              autoComplete="email"
+              required
             />
           </label>
 
@@ -103,24 +113,28 @@ export function AuthModal({
               onChange={(event) => setPassword(event.target.value)}
               className="w-full rounded-xl border border-surface-border px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-accent/40"
               placeholder="8자 이상"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              minLength={8}
+              required
             />
           </label>
 
           {error && <p className="text-sm text-rose-600">{error}</p>}
 
           <div className="flex gap-2">
-            <Button variant="primary" onClick={() => void handleSubmit()} disabled={isSubmitting}>
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
               {isSubmitting ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입'}
             </Button>
             <Button
               variant="outline"
+              type="button"
               onClick={() => onSwitchMode(mode === 'login' ? 'register' : 'login')}
               disabled={isSubmitting}
             >
               {mode === 'login' ? '회원가입으로' : '로그인으로'}
             </Button>
           </div>
-        </div>
+        </form>
       </Card>
     </div>
   );

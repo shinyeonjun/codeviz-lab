@@ -1,0 +1,189 @@
+%% hohyun / CodeViz DB design
+%% Current implemented tables are marked with comments.
+%% Planned tables turn JSON catalogs, exam sessions, progress, and template metadata into DB-backed data.
+
+erDiagram
+    users ||--o{ auth_sessions : "owns"
+    users ||--o{ execution_runs : "runs"
+    users ||--o{ exam_attempts : "submits"
+    users ||--o{ lesson_progress : "tracks"
+    users ||--o{ exam_sessions : "starts"
+
+    execution_runs ||--o{ execution_steps : "records"
+    visualization_templates ||--o{ execution_runs : "selected_by_ai"
+
+    learning_categories ||--o{ learning_lessons : "groups"
+    visualization_templates ||--o{ learning_lessons : "default_template"
+    learning_lessons ||--|| lesson_contents : "has"
+    learning_lessons ||--o| lesson_exercises : "has"
+    lesson_exercises ||--o{ exercise_test_cases : "checks"
+    learning_lessons ||--o{ lesson_progress : "completed_by"
+    learning_lessons ||--o{ execution_runs : "practice_run"
+
+    exam_sessions ||--o{ exam_session_questions : "contains"
+    learning_lessons ||--o{ exam_session_questions : "asked_as"
+    exam_session_questions ||--o{ exam_attempts : "answered_by"
+    exam_attempts ||--o{ exam_case_results : "case_results"
+
+    users {
+        string id PK
+        string email UK
+        string password_hash
+        string name
+        timestamptz created_at
+    }
+
+    auth_sessions {
+        string id PK
+        string token_hash UK
+        string user_id FK
+        timestamptz created_at
+        timestamptz expires_at
+    }
+
+    execution_runs {
+        string id PK
+        string user_id FK "nullable, current"
+        string lesson_id FK "planned, nullable"
+        string language
+        string visualization_mode
+        string visualization_template_id FK "planned"
+        string status
+        text source_code
+        text stdin
+        text stdout
+        text stderr
+        text error_message
+        int step_count
+        timestamptz created_at
+        timestamptz completed_at
+    }
+
+    execution_steps {
+        int id PK
+        string run_id FK
+        int step_index
+        int line_number
+        string event_type
+        string function_name
+        json locals_snapshot
+        json globals_snapshot
+        text stdout_snapshot
+        text error_message
+        json call_stack
+        json metadata
+    }
+
+    visualization_templates {
+        string id PK
+        string base_mode
+        string display_name
+        text description
+        json supported_languages
+        json required_trace_features
+        boolean is_active
+        timestamptz created_at
+    }
+
+    learning_categories {
+        string id PK
+        string name
+        text description
+        int sort_order
+        boolean is_active
+    }
+
+    learning_lessons {
+        string id PK
+        string category_id FK
+        string visualization_template_id FK
+        string title
+        text description
+        string language
+        string difficulty
+        int estimated_minutes
+        json tags
+        int sort_order
+        boolean is_active
+    }
+
+    lesson_contents {
+        string lesson_id PK,FK
+        string title
+        text summary
+        json concept_points
+        text walkthrough_code
+    }
+
+    lesson_exercises {
+        string id PK
+        string lesson_id FK
+        string title
+        text prompt
+        text starter_code
+        string function_name
+        json checkpoints
+    }
+
+    exercise_test_cases {
+        string id PK
+        string exercise_id FK
+        int case_order
+        json input
+        json expected
+        text description
+        boolean is_hidden
+    }
+
+    lesson_progress {
+        string id PK
+        string user_id FK
+        string lesson_id FK
+        string status
+        int best_score
+        timestamptz last_opened_at
+        timestamptz completed_at
+    }
+
+    exam_sessions {
+        string id PK
+        string user_id FK
+        string category_id FK
+        int question_count
+        string status
+        timestamptz started_at
+        timestamptz completed_at
+    }
+
+    exam_session_questions {
+        string id PK
+        string session_id FK
+        string lesson_id FK
+        int question_order
+    }
+
+    exam_attempts {
+        string id PK
+        string user_id FK "nullable, current"
+        string session_question_id FK "planned, nullable"
+        string lesson_id FK
+        string question_id
+        text source_code
+        string status
+        int score
+        int passed_count
+        int total_count
+        text error_message
+        json result_payload
+        timestamptz created_at
+    }
+
+    exam_case_results {
+        string id PK
+        string attempt_id FK
+        string case_id
+        boolean passed
+        json expected
+        json actual
+        text message
+    }

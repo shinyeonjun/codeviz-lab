@@ -1,0 +1,1491 @@
+[
+  {
+    "id": "lesson-data-types",
+    "title": "자료형과 값의 종류",
+    "category_id": "basics",
+    "description": "숫자, 문자열, 불리언, 리스트처럼 값의 종류가 실행 중 어떻게 구분되는지 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "입문",
+    "estimated_minutes": 9,
+    "tags": [
+      "자료형",
+      "값",
+      "기초 문법"
+    ],
+    "learning_points": [
+      "정수와 문자열 구분",
+      "불리언 값 이해",
+      "type으로 값 확인"
+    ],
+    "source_code": "values = [3, \"code\", True, 2.5]\nfor value in values:\n    print(type(value).__name__)\n",
+    "exercise": {
+      "prompt": "자료형과 값의 종류의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def data_types():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "data_types",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-operator-precedence",
+    "title": "연산자와 우선순위",
+    "category_id": "basics",
+    "description": "산술, 비교, 논리 연산자가 어떤 순서로 계산되는지 추적합니다.",
+    "language": "python",
+    "visualization_mode": "flowchart",
+    "difficulty": "입문",
+    "estimated_minutes": 10,
+    "tags": [
+      "연산자",
+      "우선순위",
+      "비교"
+    ],
+    "learning_points": [
+      "산술 연산 순서 이해",
+      "비교 결과 확인",
+      "논리 연산 결합"
+    ],
+    "source_code": "score = 70 + 5 * 2\npassed = score >= 80 and score < 100\nprint(score)\nprint(passed)\n",
+    "exercise": {
+      "prompt": "연산자와 우선순위의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def operator_precedence():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "operator_precedence",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-switch-match",
+    "title": "switch / match 분기",
+    "category_id": "basics",
+    "description": "여러 조건 중 하나의 분기를 선택하는 흐름을 Python match 문으로 익힙니다.",
+    "language": "python",
+    "visualization_mode": "flowchart",
+    "difficulty": "초급",
+    "estimated_minutes": 12,
+    "tags": [
+      "조건문",
+      "switch",
+      "match"
+    ],
+    "learning_points": [
+      "여러 분기 구조 이해",
+      "default 처리 이해",
+      "선택된 경로 추적"
+    ],
+    "source_code": "command = \"start\"\nmatch command:\n    case \"start\":\n        result = \"run\"\n    case \"stop\":\n        result = \"halt\"\n    case _:\n        result = \"unknown\"\nprint(result)\n",
+    "exercise": {
+      "prompt": "switch / match 분기의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def switch_match():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "switch_match",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-function-parameters",
+    "title": "함수와 매개변수",
+    "category_id": "basics",
+    "description": "함수에 값을 전달하고 return으로 결과가 돌아오는 흐름을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "call-stack",
+    "difficulty": "초급",
+    "estimated_minutes": 12,
+    "tags": [
+      "함수",
+      "매개변수",
+      "return"
+    ],
+    "learning_points": [
+      "매개변수 전달",
+      "지역 변수 이해",
+      "반환값 추적"
+    ],
+    "source_code": "def add_bonus(score, bonus):\n    total = score + bonus\n    return total\n\nresult = add_bonus(70, 5)\nprint(result)\n",
+    "exercise": {
+      "prompt": "함수와 매개변수의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def function_parameters():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "function_parameters",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-dictionary-basics",
+    "title": "딕셔너리 기본",
+    "category_id": "basics",
+    "description": "key와 value로 값을 저장하고 갱신하는 흐름을 익힙니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 12,
+    "tags": [
+      "딕셔너리",
+      "key",
+      "value"
+    ],
+    "learning_points": [
+      "key로 값 접근",
+      "값 갱신",
+      "존재 여부 확인"
+    ],
+    "source_code": "scores = {\"kim\": 80, \"lee\": 75}\nscores[\"park\"] = 90\nscores[\"kim\"] += 5\nprint(scores)\n",
+    "exercise": {
+      "prompt": "딕셔너리 기본의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def dictionary_basics():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "dictionary_basics",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-set-basics",
+    "title": "set 기본",
+    "category_id": "basics",
+    "description": "중복을 제거하고 포함 여부를 빠르게 확인하는 set의 동작을 봅니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 11,
+    "tags": [
+      "set",
+      "중복 제거",
+      "포함 검사"
+    ],
+    "learning_points": [
+      "중복 제거 이해",
+      "add 연산 확인",
+      "in 연산 확인"
+    ],
+    "source_code": "visited = set()\nfor node in [1, 2, 2, 3]:\n    visited.add(node)\nprint(2 in visited)\nprint(sorted(visited))\n",
+    "exercise": {
+      "prompt": "set 기본의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def set_basics():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "set_basics",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-class-object",
+    "title": "class와 객체",
+    "category_id": "basics",
+    "description": "class로 객체를 만들고 속성이 객체마다 따로 저장되는 흐름을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 14,
+    "tags": [
+      "class",
+      "객체",
+      "속성"
+    ],
+    "learning_points": [
+      "클래스 정의",
+      "객체 생성",
+      "속성 변경"
+    ],
+    "source_code": "class Counter:\n    def __init__(self):\n        self.value = 0\n\ncounter = Counter()\ncounter.value += 1\nprint(counter.value)\n",
+    "exercise": {
+      "prompt": "class와 객체의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def class_object():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "class_object",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-inheritance",
+    "title": "상속 기본",
+    "category_id": "basics",
+    "description": "부모 클래스의 동작을 자식 클래스가 이어받는 구조를 확인합니다.",
+    "language": "python",
+    "visualization_mode": "call-stack",
+    "difficulty": "중급",
+    "estimated_minutes": 15,
+    "tags": [
+      "상속",
+      "class",
+      "메서드"
+    ],
+    "learning_points": [
+      "부모 메서드 호출",
+      "자식 클래스 생성",
+      "동작 재사용"
+    ],
+    "source_code": "class Animal:\n    def speak(self):\n        return \"sound\"\n\nclass Dog(Animal):\n    pass\n\npet = Dog()\nprint(pet.speak())\n",
+    "exercise": {
+      "prompt": "상속 기본의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def inheritance():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "inheritance",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-exception-handling",
+    "title": "예외 처리",
+    "category_id": "basics",
+    "description": "try / except로 오류가 발생했을 때 실행 흐름이 어떻게 바뀌는지 확인합니다.",
+    "language": "python",
+    "visualization_mode": "flowchart",
+    "difficulty": "초급",
+    "estimated_minutes": 13,
+    "tags": [
+      "예외처리",
+      "try",
+      "except"
+    ],
+    "learning_points": [
+      "오류 발생 지점 파악",
+      "except 흐름 이해",
+      "복구 값 설정"
+    ],
+    "source_code": "text = \"abc\"\ntry:\n    number = int(text)\nexcept ValueError:\n    number = 0\nprint(number)\n",
+    "exercise": {
+      "prompt": "예외 처리의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def exception_handling():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "exception_handling",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-pointer-concept-c",
+    "title": "포인터 개념(C)",
+    "category_id": "basics",
+    "description": "C 포인터의 주소 참조 개념을 인덱스와 값 갱신 흐름으로 단순화해 봅니다.",
+    "language": "c",
+    "supported_languages": [
+      "c"
+    ],
+    "visualization_mode": "array-cells",
+    "difficulty": "중급",
+    "estimated_minutes": 15,
+    "tags": [
+      "포인터",
+      "C",
+      "주소"
+    ],
+    "learning_points": [
+      "간접 참조 개념 이해",
+      "가리키는 위치 변경",
+      "값 갱신 추적"
+    ],
+    "source_code": "#include <stdio.h>\n\nint main(void) {\n    int memory[3] = {10, 20, 30};\n    int *pointer = &memory[1];\n    *pointer = *pointer + 5;\n    for (int i = 0; i < 3; i++) {\n        printf(\"%d \", memory[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}\n",
+    "exercise": {
+      "prompt": "포인터 개념(C)의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "#include <stdio.h>\n\nvoid update_second_value(int memory[]) {\n    /* TODO: pointer로 두 번째 값을 5 증가시키세요. */\n}\n\nint main(void) {\n    int memory[3] = {10, 20, 30};\n    update_second_value(memory);\n    for (int i = 0; i < 3; i++) {\n        printf(\"%d \", memory[i]);\n    }\n    printf(\"\\n\");\n    return 0;\n}\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "pointer_concept_c",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-lambda-functions",
+    "title": "람다 함수",
+    "category_id": "basics",
+    "description": "짧은 익명 함수를 변수에 저장하고 호출하는 흐름을 확인합니다.",
+    "language": "python",
+    "supported_languages": [
+      "python",
+      "java"
+    ],
+    "visualization_mode": "call-stack",
+    "difficulty": "초급",
+    "estimated_minutes": 12,
+    "tags": [
+      "람다",
+      "함수",
+      "고급 문법"
+    ],
+    "learning_points": [
+      "익명 함수 정의",
+      "함수 값 저장",
+      "호출 결과 확인"
+    ],
+    "source_code": "double = lambda value: value * 2\nnumbers = [1, 2, 3]\nresult = []\nfor number in numbers:\n    result.append(double(number))\nprint(result)\n",
+    "exercise": {
+      "prompt": "람다 함수의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def lambda_functions():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "lambda_functions",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-file-io-basics",
+    "title": "파일 입출력 기본",
+    "category_id": "basics",
+    "description": "파일처럼 읽고 쓰는 흐름을 문자열 버퍼로 안전하게 실습합니다.",
+    "language": "python",
+    "visualization_mode": "flowchart",
+    "difficulty": "초급",
+    "estimated_minutes": 13,
+    "tags": [
+      "파일 입출력",
+      "read",
+      "write"
+    ],
+    "learning_points": [
+      "쓰기 흐름 이해",
+      "읽기 흐름 이해",
+      "문자열 데이터 처리"
+    ],
+    "source_code": "from io import StringIO\nfile = StringIO()\nfile.write(\"hello\")\nfile.seek(0)\ncontent = file.read()\nprint(content)\n",
+    "exercise": {
+      "prompt": "파일 입출력 기본의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def file_io_basics():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "file_io_basics",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-linked-list",
+    "title": "연결 리스트",
+    "category_id": "data-structures",
+    "description": "노드가 다음 노드를 가리키며 이어지는 선형 자료구조를 확인합니다.",
+    "language": "python",
+    "visualization_mode": "tree-binary",
+    "difficulty": "초급",
+    "estimated_minutes": 16,
+    "tags": [
+      "연결리스트",
+      "노드",
+      "포인터"
+    ],
+    "learning_points": [
+      "노드 연결",
+      "head 이동",
+      "순차 탐색"
+    ],
+    "source_code": "node3 = {\"value\": 3, \"next\": None}\nnode2 = {\"value\": 2, \"next\": node3}\nnode1 = {\"value\": 1, \"next\": node2}\ncurrent = node1\nvalues = []\nwhile current is not None:\n    values.append(current[\"value\"])\n    current = current[\"next\"]\nprint(values)\n",
+    "exercise": {
+      "prompt": "연결 리스트의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def linked_list():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "linked_list",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-heap-structure",
+    "title": "힙 구조",
+    "category_id": "data-structures",
+    "description": "가장 작은 값이 먼저 나오는 최소 힙의 삽입과 삭제 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "array-heapify",
+    "difficulty": "중급",
+    "estimated_minutes": 17,
+    "tags": [
+      "힙",
+      "우선순위 큐",
+      "트리"
+    ],
+    "learning_points": [
+      "heap push 이해",
+      "heap pop 이해",
+      "배열 기반 트리 구조"
+    ],
+    "source_code": "import heapq\nheap = []\nfor value in [4, 1, 3, 2]:\n    heapq.heappush(heap, value)\nsmallest = heapq.heappop(heap)\nprint(smallest)\nprint(heap)\n",
+    "exercise": {
+      "prompt": "힙 구조의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def heap_structure():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "heap_structure",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-hash-table",
+    "title": "해시 테이블",
+    "category_id": "data-structures",
+    "description": "key를 해시해 저장 위치를 찾는 구조를 단순한 버킷 배열로 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 16,
+    "tags": [
+      "해시 테이블",
+      "버킷",
+      "충돌"
+    ],
+    "learning_points": [
+      "해시 인덱스 계산",
+      "버킷 저장",
+      "충돌 처리"
+    ],
+    "source_code": "buckets = [[] for _ in range(3)]\nfor key in [\"a\", \"d\", \"b\"]:\n    index = ord(key[0]) % 3\n    buckets[index].append(key)\nprint(buckets)\n",
+    "exercise": {
+      "prompt": "해시 테이블의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def hash_table():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "hash_table",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-hash-set",
+    "title": "해시 셋",
+    "category_id": "data-structures",
+    "description": "중복 없는 원소 집합을 해시 기반으로 관리하는 흐름을 익힙니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 14,
+    "tags": [
+      "해시 셋",
+      "set",
+      "중복 제거"
+    ],
+    "learning_points": [
+      "원소 추가",
+      "중복 무시",
+      "포함 여부 확인"
+    ],
+    "source_code": "items = set()\nfor value in [3, 1, 3, 2]:\n    items.add(value)\nprint(3 in items)\nprint(sorted(items))\n",
+    "exercise": {
+      "prompt": "해시 셋의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def hash_set():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "hash_set",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-shell-sort",
+    "title": "셸 정렬",
+    "category_id": "algorithms",
+    "description": "간격을 줄여 가며 삽입 정렬을 수행하는 과정을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-shell-sort",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": [
+      "정렬",
+      "셸 정렬",
+      "gap"
+    ],
+    "learning_points": [
+      "gap 기반 비교",
+      "부분 삽입 정렬",
+      "gap 축소"
+    ],
+    "source_code": "numbers = [8, 5, 3, 7, 6, 2]\ngap = len(numbers) // 2\nwhile gap > 0:\n    for i in range(gap, len(numbers)):\n        temp = numbers[i]\n        j = i\n        while j >= gap and numbers[j - gap] > temp:\n            numbers[j] = numbers[j - gap]\n            j -= gap\n        numbers[j] = temp\n    gap //= 2\nprint(numbers)\n",
+    "exercise": {
+      "prompt": "셸 정렬의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def shell_sort():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "shell_sort",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-merge-sort",
+    "title": "병합 정렬",
+    "category_id": "algorithms",
+    "description": "배열을 나눈 뒤 정렬된 부분을 병합하는 흐름을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "showcase-merge-sort",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": [
+      "정렬",
+      "병합 정렬",
+      "분할 정복"
+    ],
+    "learning_points": [
+      "배열 분할",
+      "정렬된 병합",
+      "재귀 흐름"
+    ],
+    "source_code": "def merge_sort(items):\n    if len(items) <= 1:\n        return items\n    mid = len(items) // 2\n    left = merge_sort(items[:mid])\n    right = merge_sort(items[mid:])\n    result = []\n    while left and right:\n        result.append(left.pop(0) if left[0] <= right[0] else right.pop(0))\n    return result + left + right\n\nprint(merge_sort([5, 2, 4, 1]))\n",
+    "exercise": {
+      "prompt": "병합 정렬의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def merge_sort():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "merge_sort",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-quick-sort",
+    "title": "퀵 정렬",
+    "category_id": "algorithms",
+    "description": "피벗을 기준으로 작은 값과 큰 값을 나누는 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "array-quick-partition",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": [
+      "정렬",
+      "퀵 정렬",
+      "피벗"
+    ],
+    "learning_points": [
+      "피벗 선택",
+      "분할",
+      "재귀 정렬"
+    ],
+    "source_code": "def quick_sort(items):\n    if len(items) <= 1:\n        return items\n    pivot = items[0]\n    left = [x for x in items[1:] if x <= pivot]\n    right = [x for x in items[1:] if x > pivot]\n    return quick_sort(left) + [pivot] + quick_sort(right)\n\nprint(quick_sort([4, 1, 5, 2]))\n",
+    "exercise": {
+      "prompt": "퀵 정렬의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def quick_sort():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "quick_sort",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-heap-sort",
+    "title": "힙 정렬",
+    "category_id": "algorithms",
+    "description": "힙에 값을 넣고 하나씩 꺼내며 정렬 결과를 만드는 흐름입니다.",
+    "language": "python",
+    "visualization_mode": "array-heapify",
+    "difficulty": "중급",
+    "estimated_minutes": 21,
+    "tags": [
+      "정렬",
+      "힙 정렬",
+      "heap"
+    ],
+    "learning_points": [
+      "힙 구성",
+      "최솟값 추출",
+      "정렬 배열 생성"
+    ],
+    "source_code": "import heapq\nnumbers = [5, 1, 4, 2]\nheapq.heapify(numbers)\nsorted_items = []\nwhile numbers:\n    sorted_items.append(heapq.heappop(numbers))\nprint(sorted_items)\n",
+    "exercise": {
+      "prompt": "힙 정렬의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def heap_sort():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "heap_sort",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-radix-sort",
+    "title": "기수 정렬",
+    "category_id": "algorithms",
+    "description": "자릿수별 버킷에 숫자를 나눠 담으며 정렬하는 흐름을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "showcase-radix-sort",
+    "difficulty": "중급",
+    "estimated_minutes": 22,
+    "tags": [
+      "정렬",
+      "기수 정렬",
+      "버킷"
+    ],
+    "learning_points": [
+      "일의 자리 분류",
+      "십의 자리 분류",
+      "버킷 병합"
+    ],
+    "source_code": "numbers = [31, 14, 22, 45]\nplace = 1\nfor _ in range(2):\n    buckets = [[] for _ in range(10)]\n    for number in numbers:\n        buckets[(number // place) % 10].append(number)\n    numbers = [number for bucket in buckets for number in bucket]\n    place *= 10\nprint(numbers)\n",
+    "exercise": {
+      "prompt": "기수 정렬의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def radix_sort():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "radix_sort",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-interpolation-search",
+    "title": "보간 탐색",
+    "category_id": "algorithms",
+    "description": "값의 분포를 이용해 예상 위치를 계산하며 탐색합니다.",
+    "language": "python",
+    "visualization_mode": "binary-search-window",
+    "difficulty": "중급",
+    "estimated_minutes": 18,
+    "tags": [
+      "탐색",
+      "보간 탐색",
+      "정렬 배열"
+    ],
+    "learning_points": [
+      "예상 위치 계산",
+      "범위 축소",
+      "목표 비교"
+    ],
+    "source_code": "numbers = [10, 20, 30, 40, 50]\ntarget = 40\nlow, high = 0, len(numbers) - 1\nfound = -1\nwhile low <= high and numbers[low] <= target <= numbers[high]:\n    pos = low + (target - numbers[low]) * (high - low) // (numbers[high] - numbers[low])\n    if numbers[pos] == target:\n        found = pos\n        break\n    if numbers[pos] < target:\n        low = pos + 1\n    else:\n        high = pos - 1\nprint(found)\n",
+    "exercise": {
+      "prompt": "보간 탐색의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def interpolation_search():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "interpolation_search",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-hash-search",
+    "title": "해시 탐색",
+    "category_id": "algorithms",
+    "description": "해시 맵을 사용해 key의 위치를 빠르게 찾는 흐름입니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 14,
+    "tags": [
+      "탐색",
+      "해시",
+      "dict"
+    ],
+    "learning_points": [
+      "key 저장",
+      "평균 O(1) 조회",
+      "없을 때 처리"
+    ],
+    "source_code": "index_by_name = {\"kim\": 0, \"lee\": 1, \"park\": 2}\ntarget = \"park\"\nresult = index_by_name.get(target, -1)\nprint(result)\n",
+    "exercise": {
+      "prompt": "해시 탐색의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def hash_search():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "hash_search",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-graph-dfs-traversal",
+    "title": "그래프 DFS",
+    "category_id": "algorithms",
+    "description": "스택 또는 재귀로 깊이 우선 탐색을 수행하는 흐름을 봅니다.",
+    "language": "python",
+    "visualization_mode": "graph-dfs-traversal",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": [
+      "그래프",
+      "DFS",
+      "스택"
+    ],
+    "learning_points": [
+      "깊이 우선 이동",
+      "방문 처리",
+      "되돌아가기"
+    ],
+    "source_code": "graph = {1: [2, 3], 2: [4], 3: [], 4: []}\nvisited = []\ndef dfs(node):\n    visited.append(node)\n    for next_node in graph[node]:\n        if next_node not in visited:\n            dfs(next_node)\n\ndfs(1)\nprint(visited)\n",
+    "exercise": {
+      "prompt": "그래프 DFS의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def graph_dfs_traversal():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "graph_dfs_traversal",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-dijkstra-shortest-path",
+    "title": "다익스트라 최단 경로",
+    "category_id": "algorithms",
+    "description": "가장 가까운 정점을 먼저 확정하며 최단 거리를 갱신합니다.",
+    "language": "python",
+    "visualization_mode": "showcase-dijkstra",
+    "difficulty": "고급",
+    "estimated_minutes": 25,
+    "tags": [
+      "그래프",
+      "다익스트라",
+      "최단 경로"
+    ],
+    "learning_points": [
+      "우선순위 큐 사용",
+      "거리 갱신",
+      "확정 정점 관리"
+    ],
+    "source_code": "import heapq\n\ngraph = {\n    0: [(1, 7), (2, 9), (5, 14)],\n    1: [(0, 7), (2, 10), (3, 15)],\n    2: [(0, 9), (1, 10), (3, 11), (5, 2)],\n    3: [(1, 15), (2, 11), (4, 6)],\n    4: [(3, 6), (5, 9)],\n    5: [(0, 14), (2, 2), (4, 9)],\n}\n\ndistance = [float('inf')] * 6\ndistance[0] = 0\nheap = [(0, 0)]\n\nwhile heap:\n    cost, node = heapq.heappop(heap)\n    if cost > distance[node]:\n        continue\n    for next_node, weight in graph[node]:\n        next_cost = cost + weight\n        if next_cost < distance[next_node]:\n            distance[next_node] = next_cost\n            heapq.heappush(heap, (next_cost, next_node))\n\nprint(distance)\n",
+    "exercise": {
+      "prompt": "다익스트라 최단 경로의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def dijkstra_shortest_path():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "dijkstra_shortest_path",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-floyd-warshall",
+    "title": "플로이드-워셜",
+    "category_id": "algorithms",
+    "description": "모든 정점 쌍의 최단 거리를 2차원 DP로 갱신합니다.",
+    "language": "python",
+    "visualization_mode": "dp-table",
+    "difficulty": "고급",
+    "estimated_minutes": 24,
+    "tags": [
+      "그래프",
+      "DP",
+      "최단 경로"
+    ],
+    "learning_points": [
+      "중간 정점 선택",
+      "거리 테이블 갱신",
+      "삼중 반복 이해"
+    ],
+    "source_code": "INF = 99\ndist = [[0, 2, INF], [INF, 0, 3], [1, INF, 0]]\nfor mid in range(3):\n    for start in range(3):\n        for end in range(3):\n            dist[start][end] = min(dist[start][end], dist[start][mid] + dist[mid][end])\nprint(dist)\n",
+    "exercise": {
+      "prompt": "플로이드-워셜의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def floyd_warshall():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "floyd_warshall",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-kruskal-mst",
+    "title": "크루스칼 MST",
+    "category_id": "algorithms",
+    "description": "간선을 가중치 순서로 보며 사이클 없이 최소 신장 트리를 만듭니다.",
+    "language": "python",
+    "visualization_mode": "graph-node-edge",
+    "difficulty": "고급",
+    "estimated_minutes": 24,
+    "tags": [
+      "그래프",
+      "크루스칼",
+      "MST"
+    ],
+    "learning_points": [
+      "간선 정렬",
+      "union-find",
+      "사이클 방지"
+    ],
+    "source_code": "parent = {1: 1, 2: 2, 3: 3}\ndef find(x):\n    if parent[x] != x:\n        parent[x] = find(parent[x])\n    return parent[x]\n\nedges = [(1, 1, 2), (2, 2, 3), (3, 1, 3)]\ntotal = 0\nfor cost, a, b in edges:\n    ra, rb = find(a), find(b)\n    if ra != rb:\n        parent[rb] = ra\n        total += cost\nprint(total)\n",
+    "exercise": {
+      "prompt": "크루스칼 MST의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def kruskal_mst():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "kruskal_mst",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-prim-mst",
+    "title": "프림 MST",
+    "category_id": "algorithms",
+    "description": "하나의 정점에서 시작해 가장 싼 연결 간선을 확장합니다.",
+    "language": "python",
+    "visualization_mode": "graph-node-edge",
+    "difficulty": "고급",
+    "estimated_minutes": 24,
+    "tags": [
+      "그래프",
+      "프림",
+      "MST"
+    ],
+    "learning_points": [
+      "시작 정점 선택",
+      "우선순위 큐",
+      "방문 집합 확장"
+    ],
+    "source_code": "import heapq\ngraph = {1: [(1, 2), (3, 3)], 2: [(1, 1), (2, 3)], 3: [(3, 1), (2, 2)]}\nvisited = set()\nheap = [(0, 1)]\ntotal = 0\nwhile heap:\n    cost, node = heapq.heappop(heap)\n    if node in visited:\n        continue\n    visited.add(node)\n    total += cost\n    for weight, next_node in graph[node]:\n        heapq.heappush(heap, (weight, next_node))\nprint(total)\n",
+    "exercise": {
+      "prompt": "프림 MST의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def prim_mst():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "prim_mst",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-topological-sort",
+    "title": "위상 정렬",
+    "category_id": "algorithms",
+    "description": "진입 차수가 0인 정점부터 꺼내며 순서를 만듭니다.",
+    "language": "python",
+    "visualization_mode": "graph-topological-sort",
+    "difficulty": "중급",
+    "estimated_minutes": 21,
+    "tags": [
+      "그래프",
+      "위상 정렬",
+      "큐"
+    ],
+    "learning_points": [
+      "진입 차수 계산",
+      "큐 처리",
+      "순서 생성"
+    ],
+    "source_code": "from collections import deque\ngraph = {1: [2, 3], 2: [4], 3: [4], 4: []}\nindegree = {1: 0, 2: 1, 3: 1, 4: 2}\nqueue = deque([1])\norder = []\nwhile queue:\n    node = queue.popleft()\n    order.append(node)\n    for next_node in graph[node]:\n        indegree[next_node] -= 1\n        if indegree[next_node] == 0:\n            queue.append(next_node)\nprint(order)\n",
+    "exercise": {
+      "prompt": "위상 정렬의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def topological_sort():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "topological_sort",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-recursion-fibonacci",
+    "title": "재귀 피보나치",
+    "category_id": "algorithms",
+    "description": "작은 문제를 재귀적으로 호출해 피보나치 수를 구합니다.",
+    "language": "python",
+    "visualization_mode": "recursion-tree",
+    "difficulty": "초급",
+    "estimated_minutes": 16,
+    "tags": [
+      "재귀",
+      "피보나치",
+      "호출 트리"
+    ],
+    "learning_points": [
+      "기저 조건",
+      "두 재귀 호출",
+      "반환값 결합"
+    ],
+    "source_code": "def fib(n):\n    if n <= 1:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(5))\n",
+    "exercise": {
+      "prompt": "재귀 피보나치의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def recursion_fibonacci():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "recursion_fibonacci",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-tower-of-hanoi",
+    "title": "하노이 탑",
+    "category_id": "algorithms",
+    "description": "원판을 옮기는 과정을 재귀 호출로 분해합니다.",
+    "language": "python",
+    "visualization_mode": "recursion-tree",
+    "difficulty": "중급",
+    "estimated_minutes": 20,
+    "tags": [
+      "재귀",
+      "하노이 탑",
+      "분할"
+    ],
+    "learning_points": [
+      "n-1개 이동",
+      "가장 큰 원판 이동",
+      "다시 n-1개 이동"
+    ],
+    "source_code": "def hanoi(n, start, via, end, moves):\n    if n == 0:\n        return\n    hanoi(n - 1, start, end, via, moves)\n    moves.append((start, end))\n    hanoi(n - 1, via, start, end, moves)\n\nmoves = []\nhanoi(3, \"A\", \"B\", \"C\", moves)\nprint(moves)\n",
+    "exercise": {
+      "prompt": "하노이 탑의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def tower_of_hanoi():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "tower_of_hanoi",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-divide-and-conquer",
+    "title": "분할 정복 기본",
+    "category_id": "algorithms",
+    "description": "문제를 나누고 각각 해결한 뒤 결과를 합치는 패턴을 익힙니다.",
+    "language": "python",
+    "visualization_mode": "divide-and-conquer",
+    "difficulty": "중급",
+    "estimated_minutes": 18,
+    "tags": [
+      "분할 정복",
+      "재귀",
+      "병합"
+    ],
+    "learning_points": [
+      "문제 분할",
+      "부분 문제 해결",
+      "결과 결합"
+    ],
+    "source_code": "def sum_range(items):\n    if len(items) <= 1:\n        return sum(items)\n    mid = len(items) // 2\n    return sum_range(items[:mid]) + sum_range(items[mid:])\n\nprint(sum_range([1, 2, 3, 4]))\n",
+    "exercise": {
+      "prompt": "분할 정복 기본의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def divide_and_conquer():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "divide_and_conquer",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-dp-fibonacci",
+    "title": "DP 피보나치",
+    "category_id": "algorithms",
+    "description": "이미 계산한 값을 테이블에 저장해 중복 계산을 줄입니다.",
+    "language": "python",
+    "visualization_mode": "memoized-recursion",
+    "difficulty": "초급",
+    "estimated_minutes": 17,
+    "tags": [
+      "DP",
+      "피보나치",
+      "메모이제이션"
+    ],
+    "learning_points": [
+      "메모 저장",
+      "중복 호출 제거",
+      "이전 값 재사용"
+    ],
+    "source_code": "memo = {0: 0, 1: 1}\ndef fib(n):\n    if n not in memo:\n        memo[n] = fib(n - 1) + fib(n - 2)\n    return memo[n]\n\nprint(fib(6))\nprint(memo)\n",
+    "exercise": {
+      "prompt": "DP 피보나치의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def dp_fibonacci():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "dp_fibonacci",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-knapsack",
+    "title": "배낭 문제",
+    "category_id": "algorithms",
+    "description": "무게 제한 안에서 가치를 최대로 만드는 DP 테이블을 채웁니다.",
+    "language": "python",
+    "visualization_mode": "knapsack-table",
+    "difficulty": "중급",
+    "estimated_minutes": 24,
+    "tags": [
+      "DP",
+      "배낭 문제",
+      "최적화"
+    ],
+    "learning_points": [
+      "용량별 선택",
+      "가치 비교",
+      "테이블 갱신"
+    ],
+    "source_code": "weights = [1, 3, 4]\nvalues = [15, 20, 30]\ncapacity = 4\ndp = [0] * (capacity + 1)\nfor i in range(len(weights)):\n    for w in range(capacity, weights[i] - 1, -1):\n        dp[w] = max(dp[w], dp[w - weights[i]] + values[i])\nprint(dp)\n",
+    "exercise": {
+      "prompt": "배낭 문제의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def knapsack():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "knapsack",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-lcs",
+    "title": "LCS 최장 공통 부분 수열",
+    "category_id": "algorithms",
+    "description": "두 문자열의 공통 부분 수열 길이를 2차원 DP로 구합니다.",
+    "language": "python",
+    "visualization_mode": "lcs-table",
+    "difficulty": "중급",
+    "estimated_minutes": 24,
+    "tags": [
+      "DP",
+      "LCS",
+      "문자열"
+    ],
+    "learning_points": [
+      "문자 비교",
+      "이전 결과 참조",
+      "2차원 테이블"
+    ],
+    "source_code": "a = \"ABC\"\nb = \"AC\"\ndp = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]\nfor i in range(1, len(a) + 1):\n    for j in range(1, len(b) + 1):\n        if a[i - 1] == b[j - 1]:\n            dp[i][j] = dp[i - 1][j - 1] + 1\n        else:\n            dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\nprint(dp)\n",
+    "exercise": {
+      "prompt": "LCS 최장 공통 부분 수열의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def lcs():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "lcs",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-greedy-change",
+    "title": "탐욕 거스름돈",
+    "category_id": "algorithms",
+    "description": "가장 큰 단위부터 선택하는 탐욕 전략을 확인합니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "초급",
+    "estimated_minutes": 15,
+    "tags": [
+      "탐욕",
+      "거스름돈",
+      "그리디"
+    ],
+    "learning_points": [
+      "큰 단위 우선",
+      "남은 금액 갱신",
+      "선택 횟수 계산"
+    ],
+    "source_code": "coins = [500, 100, 50, 10]\namount = 760\nused = []\nfor coin in coins:\n    count = amount // coin\n    used.append((coin, count))\n    amount %= coin\nprint(used)\n",
+    "exercise": {
+      "prompt": "탐욕 거스름돈의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def greedy_change():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "greedy_change",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-activity-selection",
+    "title": "활동 선택",
+    "category_id": "algorithms",
+    "description": "끝나는 시간이 빠른 활동부터 선택하는 탐욕 알고리즘입니다.",
+    "language": "python",
+    "visualization_mode": "array-cells",
+    "difficulty": "중급",
+    "estimated_minutes": 18,
+    "tags": [
+      "탐욕",
+      "활동 선택",
+      "정렬"
+    ],
+    "learning_points": [
+      "종료 시간 정렬",
+      "겹치지 않는 활동 선택",
+      "선택 집합 관리"
+    ],
+    "source_code": "activities = [(1, 4), (3, 5), (0, 6), (5, 7), (8, 9)]\nactivities.sort(key=lambda item: item[1])\nselected = []\nlast_end = 0\nfor start, end in activities:\n    if start >= last_end:\n        selected.append((start, end))\n        last_end = end\nprint(selected)\n",
+    "exercise": {
+      "prompt": "활동 선택의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def activity_selection():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "activity_selection",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  },
+  {
+    "id": "lesson-huffman-coding",
+    "title": "허프만 코딩",
+    "category_id": "algorithms",
+    "description": "빈도가 낮은 노드부터 합치며 prefix code 트리를 만듭니다.",
+    "language": "python",
+    "visualization_mode": "tree-binary",
+    "difficulty": "고급",
+    "estimated_minutes": 25,
+    "tags": [
+      "탐욕",
+      "허프만 코딩",
+      "트리"
+    ],
+    "learning_points": [
+      "최소 빈도 선택",
+      "노드 병합",
+      "코드 트리 생성"
+    ],
+    "source_code": "import heapq\nheap = [(5, \"A\"), (9, \"B\"), (12, \"C\"), (13, \"D\")]\nheapq.heapify(heap)\nwhile len(heap) > 1:\n    first = heapq.heappop(heap)\n    second = heapq.heappop(heap)\n    merged = (first[0] + second[0], first[1] + second[1])\n    heapq.heappush(heap, merged)\nprint(heap[0])\n",
+    "exercise": {
+      "prompt": "허프만 코딩의 핵심 동작을 함수로 구현하세요.",
+      "starter_code": "def huffman_coding():\n    # TODO: 핵심 아이디어를 코드로 완성하세요.\n    return None\n",
+      "checkpoints": [
+        "입력과 상태 정리",
+        "핵심 연산 구현",
+        "결과 반환 확인"
+      ],
+      "function_name": "huffman_coding",
+      "test_cases": [
+        {
+          "id": "case-1",
+          "args": [],
+          "expected": 1
+        }
+      ]
+    },
+    "exam_enabled": false
+  }
+]

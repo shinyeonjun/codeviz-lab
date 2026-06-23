@@ -1,10 +1,18 @@
 from subprocess import CompletedProcess, TimeoutExpired
 
+import pytest
+
 from app.modules.executions.entities import TraceExecutionCommand
 from app.modules.executions.infrastructure.runners.languages.c.docker_runner import (
     DockerCExecutionRunner,
 )
+from app.modules.executions.infrastructure.runners.languages.java.docker_runner import (
+    DockerJavaExecutionRunner,
+)
 from app.modules.executions.runners.docker_trace_runner import DockerTraceRunner
+
+
+pytestmark = pytest.mark.no_db
 
 
 def test_docker_runner_builds_hardened_docker_command(monkeypatch):
@@ -116,3 +124,48 @@ def test_c_docker_runner_uses_executable_tmpfs(monkeypatch):
     assert result.status == "completed"
     tmpfs_index = captured["command"].index("--tmpfs") + 1
     assert "exec" in captured["command"][tmpfs_index]
+
+
+def test_java_docker_runner_uses_executable_tmpfs(monkeypatch):
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        return CompletedProcess(
+            args=command,
+            returncode=0,
+            stdout=b'{"status":"completed","stdout":"6\\n","stderr":"","error_message":null,"steps":[]}',
+            stderr=b"",
+        )
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+
+    runner = DockerJavaExecutionRunner(
+        timeout_seconds=3,
+        image="codeviz-java-sandbox:latest",
+        memory_limit="256m",
+        cpus="0.5",
+        pids_limit=64,
+        tmpfs_size="64m",
+        max_trace_steps=25,
+        max_stdout_chars=10000,
+    )
+
+    result = runner.run(
+        TraceExecutionCommand(
+            language="java",
+            source_code=(
+                "public class Main {"
+                " public static void main(String[] args) {"
+                "  System.out.println(6);"
+                " }"
+                "}"
+            ),
+            stdin="",
+        )
+    )
+
+    assert result.status == "completed"
+    tmpfs_index = captured["command"].index("--tmpfs") + 1
+    assert "exec" in captured["command"][tmpfs_index]
+    assert "CODEVIZ_MAX_TRACE_STEPS=25" in captured["command"]

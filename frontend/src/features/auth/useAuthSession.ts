@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   fetchAuthMe,
+  getErrorMessage,
   loginUser,
   logoutUser,
   registerUser,
+  shouldReportError,
   UnauthorizedError,
 } from '../../lib/api';
 import type { AuthSessionState } from '../../types/auth';
@@ -21,16 +23,14 @@ export function useAuthSession() {
       const state = await fetchAuthMe();
       setAuthState(state);
     } catch (bootstrapError) {
-      console.error(bootstrapError);
       if (bootstrapError instanceof UnauthorizedError) {
         setAuthState(null);
         return;
       }
-      setError(
-        bootstrapError instanceof Error
-          ? bootstrapError.message
-          : '인증 상태를 불러오지 못했습니다.',
-      );
+      if (shouldReportError(bootstrapError)) {
+        console.error(bootstrapError);
+      }
+      setError(getErrorMessage(bootstrapError, '인증 상태를 불러오지 못했습니다.'));
       setAuthState(null);
     } finally {
       setIsLoading(false);
@@ -65,8 +65,10 @@ export function useAuthSession() {
       setAuthState(state);
       return true;
     } catch (registerError) {
-      console.error(registerError);
-      setError(registerError instanceof Error ? registerError.message : '회원가입에 실패했습니다.');
+      if (shouldReportError(registerError)) {
+        console.error(registerError);
+      }
+      setError(getErrorMessage(registerError, '회원가입에 실패했습니다.'));
       return false;
     } finally {
       setIsSubmitting(false);
@@ -84,11 +86,13 @@ export function useAuthSession() {
       setAuthState(state);
       return true;
     } catch (loginError) {
-      console.error(loginError);
+      if (shouldReportError(loginError)) {
+        console.error(loginError);
+      }
       if (loginError instanceof UnauthorizedError) {
         setError('이메일 또는 비밀번호를 다시 확인해 주세요.');
       } else {
-        setError(loginError instanceof Error ? loginError.message : '로그인에 실패했습니다.');
+        setError(getErrorMessage(loginError, '로그인에 실패했습니다.'));
       }
       return false;
     } finally {
@@ -103,8 +107,10 @@ export function useAuthSession() {
       await logoutUser();
       setAuthState(null);
     } catch (logoutError) {
-      console.error(logoutError);
-      setError(logoutError instanceof Error ? logoutError.message : '로그아웃에 실패했습니다.');
+      if (shouldReportError(logoutError)) {
+        console.error(logoutError);
+      }
+      setError(getErrorMessage(logoutError, '로그아웃에 실패했습니다.'));
     } finally {
       setIsSubmitting(false);
     }

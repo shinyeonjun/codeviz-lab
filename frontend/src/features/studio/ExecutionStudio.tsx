@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMonaco } from '@monaco-editor/react';
 import { ArrowLeft, Play, RotateCcw } from 'lucide-react';
-import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { ExecutionVisualization } from './ExecutionVisualization';
 import type { LearningLesson, StudioLessonSeed } from '../../types/learning';
 import type { ExecutionStudioController } from './useExecutionStudio';
 import { CodeEditorPanel } from './components/CodeEditorPanel';
-import { ExecutionErrorPanel } from './components/ExecutionErrorPanel';
-import { PlaybackControls } from './components/PlaybackControls';
+import { ExecutionResultPanel } from './components/ExecutionResultPanel';
+import { ResizableStudioLayout } from './components/ResizableStudioLayout';
 import { StdoutPanel } from './components/StdoutPanel';
-import { VariablesPanel } from './components/VariablesPanel';
 import { useLineHighlight } from './hooks/useLineHighlight';
+import { getEditorFileName } from './utils/languageUtils';
+import { resolveLessonCode } from './utils/lessonLanguageVariants';
+import type { ExecutionLanguage } from '../../types/execution';
 
 type LearningStage = 'learn' | 'implement';
 
@@ -27,16 +27,38 @@ const STAGE_OPTIONS: { id: LearningStage; label: string }[] = [
   { id: 'implement', label: '직접 구현' },
 ];
 
-function buildStageSeed(lesson: LearningLesson, stage: LearningStage): StudioLessonSeed {
+const LANGUAGE_OPTIONS: { id: ExecutionLanguage; label: string }[] = [
+  { id: 'python', label: 'Python' },
+  { id: 'java', label: 'Java' },
+  { id: 'c', label: 'C' },
+];
+
+function resolveStageVisualizationMode(lesson: LearningLesson): string {
+  return lesson.visualizationMode.startsWith('showcase-') ? lesson.visualizationMode : 'auto';
+}
+
+function resolveStageCode(
+  lesson: LearningLesson,
+  stage: LearningStage,
+  language: ExecutionLanguage,
+): string {
+  return resolveLessonCode(lesson, stage, language);
+}
+
+function buildStageSeed(
+  lesson: LearningLesson,
+  stage: LearningStage,
+  language: ExecutionLanguage,
+): StudioLessonSeed {
   if (stage === 'implement') {
     return {
       id: `${lesson.id}:implement`,
       title: lesson.implementationChallenge.title,
       categoryName: lesson.categoryName,
       description: lesson.implementationChallenge.prompt,
-      language: lesson.language,
-      visualizationMode: lesson.visualizationMode,
-      sourceCode: lesson.implementationChallenge.starterCode,
+      language,
+      visualizationMode: resolveStageVisualizationMode(lesson),
+      sourceCode: resolveStageCode(lesson, stage, language),
       difficulty: lesson.difficulty,
       estimatedMinutes: lesson.estimatedMinutes,
       learningPoints: lesson.implementationChallenge.checkpoints,
@@ -49,9 +71,9 @@ function buildStageSeed(lesson: LearningLesson, stage: LearningStage): StudioLes
     title: lesson.learningContent.title,
     categoryName: lesson.categoryName,
     description: lesson.learningContent.summary,
-    language: lesson.language,
-    visualizationMode: lesson.visualizationMode,
-    sourceCode: lesson.learningContent.walkthroughCode,
+    language,
+    visualizationMode: resolveStageVisualizationMode(lesson),
+    sourceCode: resolveStageCode(lesson, stage, language),
     difficulty: lesson.difficulty,
     estimatedMinutes: lesson.estimatedMinutes,
     learningPoints: lesson.learningContent.conceptPoints,
@@ -69,11 +91,21 @@ export function ExecutionStudio({
   const editorRef = useRef<any>(null);
   const decorationsRef = useRef<string[]>([]);
   const [activeStage, setActiveStage] = useState<LearningStage>('learn');
+  const [activeLanguage, setActiveLanguage] = useState<ExecutionLanguage>(lesson.language);
+  const supportedLanguages = useMemo(
+    () => lesson.supportedLanguages?.length ? lesson.supportedLanguages : LANGUAGE_OPTIONS.map((option) => option.id),
+    [lesson.supportedLanguages],
+  );
+  const availableLanguageOptions = useMemo(
+    () => LANGUAGE_OPTIONS.filter((option) => supportedLanguages.includes(option.id)),
+    [supportedLanguages],
+  );
 
   const {
     code,
     language,
     visualizationMode,
+    showFlowchart,
     isRunning,
     execution,
     currentStepInfo,
@@ -82,6 +114,7 @@ export function ExecutionStudio({
     requestError,
     totalSteps,
     setCode,
+    setShowFlowchart,
     handleRun,
     togglePlay,
     stepPrev,
@@ -100,18 +133,15 @@ export function ExecutionStudio({
 
   useEffect(() => {
     setActiveStage('learn');
-  }, [lesson.id]);
+    setActiveLanguage(supportedLanguages.includes(lesson.language) ? lesson.language : supportedLanguages[0] ?? 'python');
+  }, [lesson.id, lesson.language, supportedLanguages]);
 
   useEffect(() => {
-    studio.applyLesson(buildStageSeed(lesson, activeStage));
-    // stage 전환과 lesson 변경에만 에디터 시드를 맞춘다.
-    // studio 객체 자체는 매 렌더마다 새로 만들어질 수 있어 의존성에서 제외한다.
+    studio.applyLesson(buildStageSeed(lesson, activeStage, activeLanguage));
+    // stage 또는 lesson 변경 시에만 에디터 seed를 맞춘다.
+    // studio 객체는 렌더마다 새 참조가 될 수 있어 의존성에서 제외한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeStage, lesson.id]);
-
-  const stageContent = useMemo(() => {
-    return activeStage === 'implement' ? lesson.implementationChallenge : lesson.learningContent;
-  }, [activeStage, lesson]);
+  }, [activeLanguage, activeStage, lesson.id]);
 
   return (
     <div className="mx-auto w-full max-w-[1440px] px-6 py-6">
@@ -152,51 +182,94 @@ export function ExecutionStudio({
             );
           })}
         </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {availableLanguageOptions.map((option) => {
+            const isActive = option.id === activeLanguage;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setActiveLanguage(option.id)}
+                className={`rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'border-accent/40 bg-accent-light/40 text-accent'
+                    : 'border-surface-border bg-white text-ink-secondary hover:bg-surface-soft'
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs text-ink-muted">
-              <span className="rounded-lg border border-surface-border bg-white px-3 py-1.5">
-                수업 시각화: {visualizationMode}
-              </span>
-              {isSelectingLesson && <span>학습을 전환하는 중입니다.</span>}
+      <ResizableStudioLayout
+        left={(
+          <div className="space-y-3">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-ink-muted">
+                <span className="rounded-lg border border-surface-border bg-white px-3 py-1.5">
+                  AI가 trace를 분석해 시각화 템플릿을 선택합니다.
+                </span>
+                {isSelectingLesson && <span>학습을 전환하는 중입니다.</span>}
+              </div>
+              <label className="inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-surface-border bg-white px-3 py-1.5 text-xs text-ink-secondary transition-colors hover:bg-surface-soft">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-surface-border text-accent focus:ring-accent"
+                  checked={showFlowchart}
+                  onChange={(event) => setShowFlowchart(event.target.checked)}
+                />
+                <span>흐름도 함께 보기</span>
+              </label>
+              <div className="flex shrink-0 gap-2">
+                <Button variant="outline" className="min-w-[96px]" onClick={resetStudio}>
+                  <RotateCcw size={14} />
+                  초기화
+                </Button>
+                <Button
+                  variant="primary"
+                  className="min-w-[96px]"
+                  onClick={() => void handleRun()}
+                  disabled={isRunning || !code.trim()}
+                >
+                  {isRunning ? (
+                    '분석 중...'
+                  ) : (
+                    <>
+                      <Play size={14} />
+                      실행
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-1.5">
-              <Button variant="outline" onClick={resetStudio}>
-                <RotateCcw size={14} />
-                초기화
-              </Button>
-              <Button variant="primary" onClick={() => void handleRun()} disabled={isRunning || !code.trim()}>
-                {isRunning ? (
-                  '분석 중...'
-                ) : (
-                  <>
-                    <Play size={14} />
-                    실행
-                  </>
-                )}
-              </Button>
-            </div>
+
+            <CodeEditorPanel
+              fileName={getEditorFileName(language, 'main')}
+              language={language}
+              code={code}
+              onChange={setCode}
+              editorRef={editorRef}
+            />
+
+            <StdoutPanel
+              stdoutSnapshot={currentStepInfo?.stdout_snapshot}
+              execution={execution}
+            />
           </div>
-
-          <CodeEditorPanel
-            fileName={language === 'c' ? 'main.c' : 'main.py'}
-            language={language}
-            code={code}
-            onChange={setCode}
-            editorRef={editorRef}
-          />
-        </div>
-
-        <div className="space-y-3">
-          <PlaybackControls
-            canControl={Boolean(execution)}
-            isPlaying={isPlaying}
+        )}
+        right={(
+          <ExecutionResultPanel
+            execution={execution}
+            requestError={requestError}
+            currentStepInfo={currentStepInfo}
             stepIndex={stepIndex}
             totalSteps={totalSteps}
+            isPlaying={isPlaying}
             playbackSpeed={studio.playbackSpeed}
+            visualizationMode={visualizationMode}
+            language={language}
             onTogglePlay={togglePlay}
             onPrev={stepPrev}
             onNext={stepNext}
@@ -204,46 +277,10 @@ export function ExecutionStudio({
             onJumpToEnd={stepEnd}
             onSeek={studio.seekStep}
             onPlaybackSpeedChange={studio.setPlaybackSpeed}
+            showStdout={false}
           />
-
-          <ExecutionErrorPanel requestError={requestError} execution={execution} />
-
-          <Card>
-            <ExecutionVisualization
-              viz={execution?.visualization}
-              stepIndex={stepIndex}
-              mode={execution?.visualizationMode ?? visualizationMode}
-            />
-          </Card>
-
-          <VariablesPanel
-            localsSnapshot={currentStepInfo?.locals_snapshot}
-            globalsSnapshot={currentStepInfo?.globals_snapshot}
-            callStack={currentStepInfo?.call_stack}
-            metadata={currentStepInfo?.metadata}
-          />
-
-          <Card>
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              {stageContent.title}
-            </h4>
-            {'summary' in stageContent ? (
-              <p className="mb-3 text-sm leading-relaxed text-ink-secondary">{stageContent.summary}</p>
-            ) : (
-              <p className="mb-3 text-sm leading-relaxed text-ink-secondary">{stageContent.prompt}</p>
-            )}
-            <div className="space-y-2">
-              {('conceptPoints' in stageContent ? stageContent.conceptPoints : stageContent.checkpoints).map((point) => (
-                <div key={point} className="rounded-lg bg-surface-soft px-3 py-2 text-sm text-ink-secondary">
-                  {point}
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <StdoutPanel stdoutSnapshot={currentStepInfo?.stdout_snapshot} execution={execution} />
-        </div>
-      </div>
+        )}
+      />
     </div>
   );
 }

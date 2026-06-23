@@ -3,6 +3,16 @@ import type { VisualizationStepState } from '../../../types/execution';
 import { asCellKeys, asMatrix, asScalarBadges } from '../utils/visualizationUtils';
 import { DetailChip, ScalarBadgeList } from '../components/VisualizationCommon';
 
+function formatDpCellValue(value: string | number) {
+  if (typeof value === 'number' && Math.abs(value) >= 1_000_000_000) {
+    return '∞';
+  }
+  if (typeof value === 'string' && value.toUpperCase() === 'INF') {
+    return '∞';
+  }
+  return String(value);
+}
+
 export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
   const matrix = asMatrix(state.payload.matrix);
   const activeCells = asCellKeys(state.payload.activeCells);
@@ -60,7 +70,9 @@ export function DpTableRenderer({ state }: { state: VisualizationStepState }) {
                   transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                   className={`flex h-12 w-12 items-center justify-center rounded-lg border transition-colors ${classes}`}
                 >
-                  <span className={`font-mono text-sm ${isActive ? 'font-bold text-ink' : 'font-semibold text-ink-secondary'}`}>{String(value)}</span>
+                  <span className={`font-mono text-sm ${isActive ? 'font-bold text-ink' : 'font-semibold text-ink-secondary'}`}>
+                    {formatDpCellValue(value)}
+                  </span>
                 </motion.div>
               );
             })}

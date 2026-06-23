@@ -74,4 +74,6 @@ async def stream_execution(
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
         execution_stream_manager.disconnect(run_id, websocket)

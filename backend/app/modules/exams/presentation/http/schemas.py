@@ -24,6 +24,7 @@ class ExamSessionCreate(BaseModel):
         validation_alias=AliasChoices("question_count", "questionCount"),
         serialization_alias="questionCount",
     )
+    language: Literal["python", "c", "java"] = "python"
 
 
 class ExamQuestionRead(BaseModel):
@@ -33,6 +34,7 @@ class ExamQuestionRead(BaseModel):
     category_name: str = Field(serialization_alias="categoryName")
     title: str
     prompt: str
+    language: Literal["python", "c", "java"]
     visualization_mode: VisualizationMode = Field(serialization_alias="visualizationMode")
     starter_code: str = Field(serialization_alias="starterCode")
     difficulty: str
@@ -44,6 +46,7 @@ class ExamSessionRead(BaseModel):
     session_id: str = Field(serialization_alias="sessionId")
     category_id: str = Field(serialization_alias="categoryId")
     category_name: str = Field(serialization_alias="categoryName")
+    language: Literal["python", "c", "java"]
     question_count: int = Field(serialization_alias="questionCount")
     questions: list[ExamQuestionRead]
 
@@ -58,6 +61,7 @@ class ExamSubmissionCreate(BaseModel):
         validation_alias=AliasChoices("source_code", "sourceCode"),
         serialization_alias="sourceCode",
     )
+    language: Literal["python", "c", "java"] = "python"
 
 
 class ExamCaseResultRead(BaseModel):

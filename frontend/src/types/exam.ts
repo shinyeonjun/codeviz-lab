@@ -1,4 +1,4 @@
-import type { VisualizationMode } from './execution';
+import type { ExecutionLanguage, VisualizationMode } from './execution';
 
 
 export interface ExamCategory {
@@ -15,6 +15,7 @@ export interface ExamQuestion {
   categoryName: string;
   title: string;
   prompt: string;
+  language: ExecutionLanguage;
   visualizationMode: VisualizationMode;
   starterCode: string;
   difficulty: string;
@@ -26,6 +27,7 @@ export interface ExamSession {
   sessionId: string;
   categoryId: string;
   categoryName: string;
+  language: ExecutionLanguage;
   questionCount: number;
   questions: ExamQuestion[];
 }

@@ -19,6 +19,12 @@ from app.modules.executions.infrastructure.runners.languages.c.docker_runner imp
 from app.modules.executions.infrastructure.runners.languages.c.local_runner import (
     LocalCExecutionRunner,
 )
+from app.modules.executions.infrastructure.runners.languages.java.docker_runner import (
+    DockerJavaExecutionRunner,
+)
+from app.modules.executions.infrastructure.runners.languages.java.local_runner import (
+    LocalJavaExecutionRunner,
+)
 from app.modules.executions.infrastructure.runners.languages.python.docker_runner import (
     DockerTraceRunner,
 )
@@ -38,6 +44,11 @@ from app.modules.executions.visualizations.templates.array_cells.template import
 from app.modules.executions.visualizations.templates.array_bars.template import (
     ArrayBarsExecutionTemplate,
 )
+from app.modules.executions.visualizations.templates.algorithm_showcase.template import (
+    DijkstraShowcaseExecutionTemplate,
+    MergeSortShowcaseExecutionTemplate,
+    RadixSortShowcaseExecutionTemplate,
+)
 from app.modules.executions.visualizations.templates.call_stack.template import (
     CallStackExecutionTemplate,
 )
@@ -46,6 +57,12 @@ from app.modules.executions.visualizations.templates.dp_table.template import (
 )
 from app.modules.executions.visualizations.templates.graph_node_edge.template import (
     GraphNodeEdgeExecutionTemplate,
+)
+from app.modules.executions.visualizations.templates.flowchart.template import (
+    FlowchartExecutionTemplate,
+)
+from app.modules.executions.visualizations.templates.hybrid.template import (
+    HybridExecutionTemplate,
 )
 from app.modules.executions.visualizations.templates.mode_aliases.template import (
     AliasExecutionTemplate,
@@ -77,6 +94,23 @@ def build_execution_visualization_registry() -> ExecutionVisualizationRegistry:
     dp_table = DpTableExecutionTemplate()
     tree_binary = TreeBinaryExecutionTemplate()
     graph_node_edge = GraphNodeEdgeExecutionTemplate()
+    flowchart = FlowchartExecutionTemplate()
+    dijkstra_showcase = DijkstraShowcaseExecutionTemplate()
+    merge_sort_showcase = MergeSortShowcaseExecutionTemplate()
+    radix_sort_showcase = RadixSortShowcaseExecutionTemplate()
+    hybrid = HybridExecutionTemplate(
+        flowchart_builder=flowchart.build,
+        structure_builders=[
+            ("graph-node-edge", graph_node_edge.build),
+            ("tree-binary", tree_binary.build),
+            ("dp-table", dp_table.build),
+            ("stack-vertical", stack_vertical.build),
+            ("queue-horizontal", queue_horizontal.build),
+            ("palindrome-pointers", palindrome_pointers.build),
+            ("array-bars", array_bars.build),
+            ("array-cells", array_cells.build),
+        ],
+    )
 
     alias_templates = [
         AliasExecutionTemplate(visualization_mode="array-selection-sort", builder=array_bars.build),
@@ -127,6 +161,11 @@ def build_execution_visualization_registry() -> ExecutionVisualizationRegistry:
             dp_table,
             tree_binary,
             graph_node_edge,
+            flowchart,
+            hybrid,
+            dijkstra_showcase,
+            merge_sort_showcase,
+            radix_sort_showcase,
             *alias_templates,
         ]
     )
@@ -140,48 +179,71 @@ def get_execution_repository(
 
 def get_trace_runner() -> TraceRunnerProtocol:
     if settings.runner_backend == "local":
-        return LanguageDispatchTraceRunner(
-            runners={
-                "python": LocalPythonTraceRunner(
-                    timeout_seconds=settings.runner_timeout_seconds,
-                    max_trace_steps=settings.runner_max_trace_steps,
-                    max_stdout_chars=settings.runner_max_stdout_chars,
-                ),
-                "c": LocalCExecutionRunner(
-                    timeout_seconds=settings.runner_c_timeout_seconds,
-                    max_trace_steps=settings.runner_max_trace_steps,
-                    max_stdout_chars=settings.runner_max_stdout_chars,
-                ),
-            }
-        )
+        return _build_local_trace_runner()
 
     if settings.runner_backend == "docker":
-        return LanguageDispatchTraceRunner(
-            runners={
-                "python": DockerTraceRunner(
-                    timeout_seconds=settings.runner_timeout_seconds,
-                    image=settings.runner_docker_image,
-                    memory_limit=settings.runner_docker_memory_limit,
-                    cpus=settings.runner_docker_cpus,
-                    pids_limit=settings.runner_docker_pids_limit,
-                    tmpfs_size=settings.runner_docker_tmpfs_size,
-                    max_trace_steps=settings.runner_max_trace_steps,
-                    max_stdout_chars=settings.runner_max_stdout_chars,
-                ),
-                "c": DockerCExecutionRunner(
-                    timeout_seconds=settings.runner_c_timeout_seconds,
-                    image=settings.runner_docker_c_image,
-                    memory_limit=settings.runner_docker_memory_limit,
-                    cpus=settings.runner_docker_cpus,
-                    pids_limit=settings.runner_docker_pids_limit,
-                    tmpfs_size=settings.runner_docker_tmpfs_size,
-                    max_trace_steps=settings.runner_max_trace_steps,
-                    max_stdout_chars=settings.runner_max_stdout_chars,
-                ),
-            }
-        )
+        return _build_docker_trace_runner()
 
     raise HTTPException(status_code=500, detail="아직 지원하지 않는 실행기입니다.")
+
+
+def _build_local_trace_runner() -> TraceRunnerProtocol:
+    return LanguageDispatchTraceRunner(
+        runners={
+            "python": LocalPythonTraceRunner(
+                timeout_seconds=settings.runner_timeout_seconds,
+                max_trace_steps=settings.runner_max_trace_steps,
+                max_stdout_chars=settings.runner_max_stdout_chars,
+            ),
+            "c": LocalCExecutionRunner(
+                timeout_seconds=settings.runner_c_timeout_seconds,
+                max_trace_steps=settings.runner_max_trace_steps,
+                max_stdout_chars=settings.runner_max_stdout_chars,
+            ),
+            "java": LocalJavaExecutionRunner(
+                timeout_seconds=settings.runner_timeout_seconds,
+                max_trace_steps=settings.runner_max_trace_steps,
+                max_stdout_chars=settings.runner_max_stdout_chars,
+            ),
+        }
+    )
+
+
+def _build_docker_trace_runner() -> TraceRunnerProtocol:
+    return LanguageDispatchTraceRunner(
+        runners={
+            "python": DockerTraceRunner(
+                timeout_seconds=settings.runner_timeout_seconds,
+                image=settings.runner_docker_image,
+                memory_limit=settings.runner_docker_memory_limit,
+                cpus=settings.runner_docker_cpus,
+                pids_limit=settings.runner_docker_pids_limit,
+                tmpfs_size=settings.runner_docker_tmpfs_size,
+                max_trace_steps=settings.runner_max_trace_steps,
+                max_stdout_chars=settings.runner_max_stdout_chars,
+            ),
+            "c": DockerCExecutionRunner(
+                timeout_seconds=settings.runner_c_timeout_seconds,
+                image=settings.runner_docker_c_image,
+                memory_limit=settings.runner_docker_memory_limit,
+                cpus=settings.runner_docker_cpus,
+                pids_limit=settings.runner_docker_pids_limit,
+                tmpfs_size=settings.runner_docker_tmpfs_size,
+                max_trace_steps=settings.runner_max_trace_steps,
+                max_stdout_chars=settings.runner_max_stdout_chars,
+            ),
+            "java": DockerJavaExecutionRunner(
+                timeout_seconds=settings.runner_timeout_seconds,
+                image=settings.runner_docker_java_image,
+                memory_limit=settings.runner_docker_memory_limit,
+                cpus=settings.runner_docker_cpus,
+                pids_limit=settings.runner_docker_pids_limit,
+                tmpfs_size=settings.runner_docker_tmpfs_size,
+                max_trace_steps=settings.runner_max_trace_steps,
+                max_stdout_chars=settings.runner_max_stdout_chars,
+            ),
+        }
+    )
 
 
 def get_execution_visualizer() -> ExecutionVisualizerProtocol:

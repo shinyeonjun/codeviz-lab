@@ -43,6 +43,7 @@ function AuthenticatedAppShell({
   const studio = useExecutionStudio(emptyLesson);
   const {
     groups,
+    insights,
     currentLesson,
     currentLessonId,
     isLoading,
@@ -93,6 +94,7 @@ function AuthenticatedAppShell({
         {currentView === 'home' && (
           <LearningHome
             groups={groups}
+            insights={insights}
             currentLesson={currentLesson}
             onOpenLesson={openLesson}
             isLoading={isLoading}

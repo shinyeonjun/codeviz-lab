@@ -3,6 +3,8 @@ from typing import Any
 
 from app.modules.executions.presentation.http.schemas import ExecutionRead
 
+UNAVAILABLE_TRACE_VALUE = "<optimized out>"
+
 
 @dataclass(slots=True)
 class TrackStats:
@@ -19,11 +21,19 @@ def merge_scope_snapshots(
 
 
 def is_numeric(value: Any) -> bool:
+    if is_unavailable_trace_value(value):
+        return False
     return isinstance(value, int | float) and not isinstance(value, bool)
 
 
 def is_scalar(value: Any) -> bool:
+    if is_unavailable_trace_value(value):
+        return False
     return value is None or isinstance(value, (bool, int, float, str))
+
+
+def is_unavailable_trace_value(value: Any) -> bool:
+    return value == UNAVAILABLE_TRACE_VALUE
 
 
 def build_scalar_badges(
@@ -104,6 +114,19 @@ def build_scalar_sequence_map(locals_snapshot: dict[str, Any]) -> dict[str, list
         sequence_map[name] = sequence
 
     return sequence_map
+
+
+def build_scalar_value_map(locals_snapshot: dict[str, Any]) -> dict[str, list[Any]]:
+    value_map: dict[str, list[Any]] = {}
+
+    for name, value in locals_snapshot.items():
+        if str(name).startswith("__"):
+            continue
+        if not is_scalar(value):
+            continue
+        value_map[name] = [value]
+
+    return value_map
 
 
 def build_character_sequence_map(locals_snapshot: dict[str, Any]) -> dict[str, list[str]]:
@@ -331,23 +354,220 @@ def build_graph_map(locals_snapshot: dict[str, Any]) -> dict[str, dict[str, Any]
     graph_map: dict[str, dict[str, Any]] = {}
 
     for name, value in locals_snapshot.items():
-        if not isinstance(value, dict) or not value:
-            continue
-        if not all(is_scalar(node) and isinstance(neighbors, list) for node, neighbors in value.items()):
-            continue
-        if not all(all(is_scalar(neighbor) for neighbor in neighbors) for neighbors in value.values()):
-            continue
-
-        nodes = [{"id": str(node), "label": str(node)} for node in value.keys()]
-        edge_set = {
-            (str(node), str(neighbor))
-            for node, neighbors in value.items()
-            for neighbor in neighbors
-        }
-        edges = [{"from": source, "to": target} for source, target in sorted(edge_set)]
-        graph_map[name] = {"nodes": nodes, "edges": edges}
+        graph = _graph_from_adjacency_map(value)
+        if graph is None:
+            graph = _graph_from_adjacency_matrix(name, value)
+        if graph is None:
+            graph = _graph_from_edge_list(name, value)
+        if graph is not None:
+            graph_map[name] = graph
 
     return graph_map
+
+
+def _graph_from_adjacency_map(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, dict) or not value:
+        return None
+
+    normalized: dict[Any, list[Any]] = {}
+    weighted_neighbors: list[tuple[Any, list[Any]]] = []
+    for node, neighbors in value.items():
+        if not is_scalar(node):
+            return None
+        neighbor_values = _sequence_items(neighbors)
+        if neighbor_values is None:
+            return None
+        for neighbor in neighbor_values:
+            if is_scalar(neighbor):
+                continue
+            weighted_neighbor = _sequence_items(neighbor)
+            if weighted_neighbor is None or len(weighted_neighbor) < 2:
+                return None
+            if not all(is_scalar(item) for item in weighted_neighbor):
+                return None
+            weighted_neighbors.append((node, weighted_neighbor))
+        normalized[node] = neighbor_values
+
+    weight_first = _uses_weight_first_neighbors(weighted_neighbors)
+    node_ids = {str(node) for node in normalized}
+    edges: list[dict[str, str]] = []
+
+    for node, neighbors in normalized.items():
+        for neighbor in neighbors:
+            if is_scalar(neighbor):
+                target = neighbor
+                label = None
+            else:
+                items = _sequence_items(neighbor) or []
+                if weight_first:
+                    target = items[1]
+                    label = items[0]
+                else:
+                    target = items[0]
+                    label = items[1]
+
+            node_ids.add(str(target))
+            edge: dict[str, str] = {"from": str(node), "to": str(target)}
+            if label is not None:
+                edge["label"] = str(label)
+            edges.append(edge)
+
+    return _build_graph_payload(node_ids=node_ids, edges=_deduplicate_edges(edges))
+
+
+def _uses_weight_first_neighbors(neighbors: list[tuple[Any, list[Any]]]) -> bool:
+    if not neighbors:
+        return False
+
+    common_self_loops = sum(1 for node, items in neighbors if str(node) == str(items[0]))
+    weight_first_self_loops = sum(1 for node, items in neighbors if str(node) == str(items[1]))
+    if common_self_loops != weight_first_self_loops:
+        return weight_first_self_loops < common_self_loops
+
+    return False
+
+
+def _graph_from_edge_list(name: str, value: Any) -> dict[str, Any] | None:
+    if not _has_graphish_name(name):
+        return None
+
+    rows = _sequence_items(value)
+    if rows is None or not rows:
+        return None
+
+    rows_for_edges: list[list[Any]] = []
+    for row in rows:
+        items = _sequence_items(row)
+        if items is None or len(items) < 2:
+            return None
+        if not all(is_scalar(item) for item in items):
+            return None
+        rows_for_edges.append(items)
+
+    edge_candidates = _select_edge_tuples(rows_for_edges)
+
+    if not edge_candidates:
+        return None
+
+    node_ids = {source for source, _, _ in edge_candidates}
+    node_ids.update(target for _, target, _ in edge_candidates)
+    edges = [
+        {"from": source, "to": target, **({"label": str(label)} if label is not None else {})}
+        for source, target, label in edge_candidates
+    ]
+    return _build_graph_payload(node_ids=node_ids, edges=edges)
+
+
+def _graph_from_adjacency_matrix(name: str, value: Any) -> dict[str, Any] | None:
+    if not _has_adjacency_matrix_name(name):
+        return None
+
+    rows = _sequence_items(value)
+    if rows is None or len(rows) < 2:
+        return None
+
+    matrix: list[list[Any]] = []
+    for row in rows:
+        row_items = _sequence_items(row)
+        if row_items is None:
+            return None
+        matrix.append(row_items)
+
+    if any(len(row) != len(matrix) for row in matrix):
+        return None
+    if not all(all(is_numeric(cell) for cell in row) for row in matrix):
+        return None
+
+    node_ids = {str(index) for index in range(len(matrix))}
+    edges: list[dict[str, str]] = []
+    for row_index, row in enumerate(matrix):
+        for col_index, value in enumerate(row):
+            if value == 0:
+                continue
+            edge: dict[str, str] = {"from": str(row_index), "to": str(col_index)}
+            if value != 1:
+                edge["label"] = str(value)
+            edges.append(edge)
+
+    if not edges:
+        return None
+    return _build_graph_payload(node_ids=node_ids, edges=edges)
+
+
+def _select_edge_tuples(rows: list[list[Any]]) -> list[tuple[str, str, Any | None]]:
+    weighted_first = _uses_weight_first_edges(rows)
+    return [_select_edge_tuple(items, weighted_first=weighted_first) for items in rows]
+
+
+def _select_edge_tuple(items: list[Any], *, weighted_first: bool) -> tuple[str, str, Any | None]:
+    if len(items) == 2:
+        return str(items[0]), str(items[1]), None
+    if weighted_first:
+        return str(items[1]), str(items[2]), items[0]
+    return str(items[0]), str(items[1]), items[2]
+
+
+def _uses_weight_first_edges(rows: list[list[Any]]) -> bool:
+    triples = [row for row in rows if len(row) >= 3]
+    if not triples:
+        return False
+
+    common_self_loops = sum(1 for row in triples if str(row[0]) == str(row[1]))
+    weight_first_self_loops = sum(1 for row in triples if str(row[1]) == str(row[2]))
+    if common_self_loops != weight_first_self_loops:
+        return weight_first_self_loops < common_self_loops
+
+    common_nodes = {str(row[0]) for row in triples} | {str(row[1]) for row in triples}
+    weight_first_nodes = {str(row[1]) for row in triples} | {str(row[2]) for row in triples}
+    if len(common_nodes) != len(weight_first_nodes):
+        return len(weight_first_nodes) > len(common_nodes)
+
+    return False
+
+
+def _sequence_items(value: Any) -> list[Any] | None:
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    if isinstance(value, dict) and value.get("type") in {"tuple", "list"}:
+        items = value.get("items")
+        if isinstance(items, list):
+            return items
+    return None
+
+
+def _has_graphish_name(name: str) -> bool:
+    lowered = name.lower()
+    return any(hint in lowered for hint in ("edge", "edges", "graph", "mst"))
+
+
+def _has_adjacency_matrix_name(name: str) -> bool:
+    lowered = name.lower()
+    return any(hint in lowered for hint in ("adj", "graph", "matrix"))
+
+
+def _edge_dicts(edge_set: set[tuple[str, str]]) -> list[dict[str, str]]:
+    return [{"from": source, "to": target} for source, target in sorted(edge_set)]
+
+
+def _deduplicate_edges(edges: list[dict[str, str]]) -> list[dict[str, str]]:
+    deduplicated: list[dict[str, str]] = []
+    seen: set[tuple[str, str, str | None]] = set()
+    for edge in edges:
+        key = (edge["from"], edge["to"], edge.get("label"))
+        if key in seen:
+            continue
+        deduplicated.append(edge)
+        seen.add(key)
+    return deduplicated
+
+
+def _build_graph_payload(
+    *,
+    node_ids: set[str],
+    edges: list[dict[str, Any]],
+) -> dict[str, Any]:
+    nodes = [{"id": node_id, "label": node_id} for node_id in sorted(node_ids)]
+    return {"nodes": nodes, "edges": edges}
 
 
 def resolve_focus_node_ids(

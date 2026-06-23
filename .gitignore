@@ -4,6 +4,8 @@
 .DS_Store
 Thumbs.db
 *.log
+/.playwright-mcp/
+final-readiness-smoke.png
 console-log.txt
 
 # Python / backend

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { executeCode } from '../../lib/api';
+import { executeCode, getErrorMessage, shouldReportError } from '../../lib/api';
 import type {
   ExecutionLanguage,
   ExecutionResult,
@@ -11,6 +11,7 @@ export interface ExecutionStudioController {
   language: ExecutionLanguage;
   code: string;
   visualizationMode: VisualizationRequestMode;
+  showFlowchart: boolean;
   isRunning: boolean;
   execution: ExecutionResult | null;
   currentStepInfo: ExecutionResult['steps'][number] | null;
@@ -21,7 +22,7 @@ export interface ExecutionStudioController {
   totalSteps: number;
   setLanguage: (value: ExecutionLanguage) => void;
   setCode: (value: string) => void;
-  setVisualizationMode: (value: VisualizationRequestMode) => void;
+  setShowFlowchart: (value: boolean) => void;
   setPlaybackSpeed: (value: number) => void;
   handleRun: () => Promise<void>;
   togglePlay: () => void;
@@ -35,6 +36,7 @@ export interface ExecutionStudioController {
 }
 
 const BASE_PLAYBACK_INTERVAL_MS = 600;
+const SHOWCASE_MODE_PREFIX = 'showcase-';
 
 export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionStudioController {
   const [language, setLanguage] = useState<ExecutionLanguage>(initialLesson.language);
@@ -42,6 +44,7 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
   const [visualizationMode, setVisualizationMode] = useState<VisualizationRequestMode>(
     initialLesson.visualizationMode,
   );
+  const [showFlowchart, setShowFlowchart] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [execution, setExecution] = useState<ExecutionResult | null>(null);
   const [stepIndex, setStepIndex] = useState(-1);
@@ -84,6 +87,16 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
     setRequestError(null);
   };
 
+  const updateCode = (value: string) => {
+    setCode(value);
+    resetStudio();
+  };
+
+  const updateLanguage = (value: ExecutionLanguage) => {
+    setLanguage(value);
+    resetStudio();
+  };
+
   const applyLesson = (lesson: StudioLessonSeed) => {
     setLanguage(lesson.language);
     setCode(lesson.sourceCode);
@@ -96,10 +109,14 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
     resetStudio();
 
     try {
+      const requestedVisualizationMode = visualizationMode.startsWith(SHOWCASE_MODE_PREFIX)
+        ? visualizationMode
+        : showFlowchart ? 'hybrid' : visualizationMode;
+
       const result = await executeCode({
         language,
         sourceCode: code,
-        visualizationMode,
+        visualizationMode: requestedVisualizationMode,
       });
 
       setExecution(result);
@@ -107,11 +124,11 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
         setStepIndex(0);
       }
     } catch (error) {
-      console.error(error);
+      if (shouldReportError(error)) {
+        console.error(error);
+      }
       setRequestError(
-        error instanceof Error
-          ? error.message
-          : '네트워크 에러가 발생했습니다. 백엔드 서버가 켜져 있는지 확인해 주세요.',
+        getErrorMessage(error, '실행 중 오류가 발생했습니다. 백엔드 서버가 켜져 있는지 확인해 주세요.'),
       );
     } finally {
       setIsRunning(false);
@@ -122,6 +139,7 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
     language,
     code,
     visualizationMode,
+    showFlowchart,
     isRunning,
     execution,
     currentStepInfo,
@@ -130,9 +148,9 @@ export function useExecutionStudio(initialLesson: StudioLessonSeed): ExecutionSt
     playbackSpeed,
     requestError,
     totalSteps,
-    setLanguage,
-    setCode,
-    setVisualizationMode,
+    setLanguage: updateLanguage,
+    setCode: updateCode,
+    setShowFlowchart,
     setPlaybackSpeed,
     handleRun,
     togglePlay: () => {

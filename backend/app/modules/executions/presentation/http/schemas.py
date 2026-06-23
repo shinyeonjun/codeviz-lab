@@ -13,13 +13,16 @@ VisualizationKind = Literal[
     "dp-table",
     "tree-binary",
     "graph-node-edge",
+    "flowchart",
+    "hybrid",
+    "algorithm-showcase",
 ]
 VisualizationMode = str
 VisualizationRequestMode = str
 
 
 class ExecutionCreate(BaseModel):
-    language: Literal["python", "c"] = "python"
+    language: Literal["python", "c", "java"] = "python"
     source_code: str = Field(min_length=1)
     stdin: str = ""
     visualization_mode: VisualizationRequestMode = Field(
@@ -70,6 +73,16 @@ class ExecutionVisualizationRead(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class ExecutionAnalysisRead(BaseModel):
+    selected_mode: str = Field(serialization_alias="selectedMode")
+    reason: str = ""
+    confidence: float | None = None
+    summary: str = ""
+    observations: list[str] = Field(default_factory=list)
+    learning_points: list[str] = Field(default_factory=list, serialization_alias="learningPoints")
+    alternatives: list[str] = Field(default_factory=list)
+
+
 class ExecutionRead(BaseModel):
     run_id: str
     language: str
@@ -88,3 +101,4 @@ class ExecutionRead(BaseModel):
     completed_at: datetime | None = None
     steps: list[ExecutionStepRead] = Field(default_factory=list)
     visualization: ExecutionVisualizationRead | None = None
+    analysis: ExecutionAnalysisRead | None = None

@@ -49,29 +49,53 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
         self._default_mode = default_mode
 
     def select(self, context: VisualizationSelectionContext) -> VisualizationSelectionResult:
-        if context.requested_mode != "auto":
+        if context.requested_mode == "flowchart":
             return self._fallback_selector.select(context)
 
         if context.language not in SUPPORTED_ANALYSIS_LANGUAGES:
-            return self._build_auto_fallback_result(
-                "현재 자동 시각화 선택이 지원되지 않는 언어라 기본 시각화 모드를 사용합니다."
-            )
+            return self._fallback_with_reason(context, "지원하지 않는 언어라 기본 선택기로 처리했습니다.")
 
         if not self._api_key:
-            return self._build_auto_fallback_result("OpenAI API 키가 없어 기본 시각화 모드를 사용합니다.")
+            return self._fallback_with_reason(context, "OpenAI API 키가 없어 기본 선택기로 처리했습니다.")
+
+        analysis = analyze_source_code(
+            language=context.language,
+            source_code=context.source_code,
+            supported_modes=self._supported_modes,
+        )
+        if context.requested_mode == "auto":
+            local_selection = self._fallback_selector.select(context)
+            if local_selection.selected_mode not in {"none", "flowchart", "hybrid"}:
+                return local_selection
+        if context.requested_mode == "auto" and analysis.suggested_mode == "hybrid":
+            return VisualizationSelectionResult(
+                selected_mode="hybrid",
+                reason="자료구조 상태 변화와 제어 흐름이 함께 있어 hybrid 모드를 선택했습니다.",
+                confidence=0.78,
+                alternatives=sorted(mode for mode in self._supported_modes if mode != "hybrid"),
+                summary="flowchart와 자료구조 시각화를 같은 실행 단계로 함께 표시합니다.",
+                observations=analysis.summary_lines,
+            )
+        if context.requested_mode == "auto" and analysis.suggested_mode == "flowchart":
+            return VisualizationSelectionResult(
+                selected_mode="flowchart",
+                reason="제어문 중심 코드라 실행 흐름을 흐름도 템플릿으로 시각화합니다.",
+                confidence=0.72,
+                alternatives=sorted(mode for mode in self._supported_modes if mode != "flowchart"),
+                summary="for, while, if 같은 제어 흐름을 중심으로 flowchart 모드를 선택했습니다.",
+                observations=analysis.summary_lines,
+            )
 
         try:
             payload = self._request_selection(context)
         except (httpx.HTTPError, ValueError, KeyError, json.JSONDecodeError):
-            return self._build_auto_fallback_result(
-                "OpenAI 시각화 선택에 실패해 기본 시각화 모드를 사용합니다."
-            )
+            return self._fallback_with_reason(context, "OpenAI trace 분석에 실패해 기본 선택기로 처리했습니다.")
 
         selected_mode = payload["selected_mode"]
+        if context.requested_mode == "auto" and selected_mode == "hybrid":
+            selected_mode = "flowchart" if "flowchart" in self._supported_modes else self._default_mode
         if selected_mode not in self._supported_modes:
-            return self._build_auto_fallback_result(
-                "OpenAI가 지원하지 않는 시각화 모드를 반환해 기본 시각화 모드를 사용합니다."
-            )
+            return self._fallback_with_reason(context, "OpenAI가 지원하지 않는 시각화 모드를 반환했습니다.")
 
         alternatives = [
             mode
@@ -81,9 +105,12 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
 
         return VisualizationSelectionResult(
             selected_mode=selected_mode,
-            reason=payload.get("reason", "OpenAI가 코드를 분석해 시각화 모드를 선택했습니다."),
+            reason=str(payload.get("reason") or "Trace IR을 분석해 시각화 모드를 선택했습니다."),
             confidence=self._normalize_confidence(payload.get("confidence")),
             alternatives=alternatives,
+            summary=str(payload.get("summary") or ""),
+            observations=self._string_list(payload.get("observations"), limit=5),
+            learning_points=self._string_list(payload.get("learning_points"), limit=5),
         )
 
     def _request_selection(self, context: VisualizationSelectionContext) -> dict[str, Any]:
@@ -117,10 +144,10 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
                 "verbosity": self._text_verbosity,
                 "format": {
                     "type": "json_schema",
-                    "name": "visualization_selection",
+                    "name": "visualization_trace_analysis",
                     "strict": True,
                     "schema": self._build_response_schema(),
-                }
+                },
             },
         }
 
@@ -149,37 +176,26 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
 
     def _build_system_prompt(self) -> str:
         return (
-            "너는 코드 학습 플랫폼의 시각화 템플릿 선택기다.\n"
-            "반드시 지원된 시각화 모드 중 하나만 선택한다.\n"
-            "코드를 실행하기 전에 정적 코드 구조만 보고 판단한다.\n"
-            "가장 중요한 기준은 학습 효과다.\n"
-            "변수명만 보고 추정하지 말고, 실제 문법 구조와 자료 구조 패턴을 우선한다.\n"
-            "명백한 구조가 없거나 여러 구조가 섞여 교육적으로 애매하면 none을 선택한다.\n"
-            "대안은 3개 이하로, 실제 후보만 우선순위 순서로 제시한다.\n"
-            "reason은 한 문장 한국어로 짧고 구체적으로 쓴다.\n"
-            "confidence는 0~1 사이 실수로, 구조가 명확할수록 높인다.\n"
-            "Python과 C 모두 같은 템플릿 체계를 사용한다.\n"
-            "판단 기준:\n"
-            "- array-bars: 숫자 배열의 정렬, 교환, shift, 삽입, 비교 인덱스 이동이 핵심일 때\n"
-            "- array-selection-sort / array-bubble-sort / array-merge-process / array-quick-partition / array-heapify / array-shell-sort: 정렬 단계가 더 구체적으로 드러날 때\n"
-            "- array-cells: 일반 리스트, 문자열 토큰, 배열 셀 값 수정/탐색이 핵심일 때\n"
-            "- binary-search-window / lower-bound-search / upper-bound-search: 정렬된 배열에서 low, high, mid 범위가 줄어드는 탐색이 핵심일 때\n"
-            "- two-pointers-opposite / two-pointers-same-direction: 두 개의 포인터가 배열 위를 이동하며 조건을 맞출 때\n"
-            "- sliding-window-fixed / sliding-window-variable: 연속 구간이 확장/축소되며 상태가 변할 때\n"
-            "- prefix-sum-array / palindrome-pointers: 누적 배열이나 문자열/배열 양끝 비교가 핵심일 때\n"
-            "- stack-vertical: append/pop 또는 LIFO 패턴이 핵심일 때\n"
-            "- monotonic-stack / stack-expression: 스택이 계산 흐름이나 단조성 유지에 쓰일 때\n"
-            "- queue-horizontal: append + pop(0), popleft, dequeue 등 FIFO 패턴이 핵심일 때\n"
-            "- deque-both-ends: 양쪽 끝에서 삽입/삭제가 모두 일어날 때\n"
-            "- call-stack: 함수 호출 체인, 재귀, 프레임 흐름이 핵심일 때\n"
-            "- recursion-tree / backtracking-tree / divide-and-conquer / memoized-recursion: 재귀 호출 분기나 되돌아감이 핵심일 때\n"
-            "- dp-table: 2차원 리스트/표를 채우는 상태 전이가 핵심일 때\n"
-            "- knapsack-table / lcs-table / edit-distance-table / grid-dp: DP 테이블의 의미가 더 구체적으로 보일 때\n"
-            "- tree-binary: left/right 자식 구조나 value-left-right 노드 구조가 핵심일 때\n"
-            "- tree-level-order / tree-bst-search / tree-bst-insert: 트리 순회나 BST 탐색/삽입 흐름이 핵심일 때\n"
-            "- graph-node-edge: 인접 리스트, 노드-간선 연결, visited 기반 순회가 핵심일 때\n"
-            "- graph-bfs-traversal / graph-dfs-traversal / graph-topological-sort / graph-connected-components / graph-cycle-detection / graph-bipartite-check: 그래프 순회/분할/판별 흐름이 핵심일 때\n"
-            "- none: 단순 입출력, 스칼라 계산, 템플릿 적합도가 낮은 경우"
+            "너는 CodeViz의 알고리즘 학습용 trace 분석기다.\n"
+            "입력으로 사용자 코드, 실행 후 Trace IR, 지원되는 시각화 모드 목록을 받는다.\n"
+            "코드 이름이나 주석만 믿지 말고, Trace IR의 상태 변화, call stack, stdout, 자료구조 변화를 우선한다.\n"
+            "요청 모드는 사용자의 힌트일 뿐이며, trace가 더 적합한 모드를 보여주면 다른 모드를 선택해도 된다.\n"
+            "학습자가 이해할 수 있도록 한국어로 짧고 구체적으로 분석한다.\n"
+            "지원 목록에 없는 모드는 절대 선택하지 않는다. trace에 변수/자료구조 변화가 있으면 가능한 한 시각화 모드를 선택한다.\n"
+            "none은 trace step이 없거나 출력만 있고 추적할 상태 변화가 전혀 없을 때만 선택한다.\n"
+            "Python, C, Java 모두 같은 시각화 모드 체계를 사용한다.\n\n"
+            "주요 모드 기준:\n"
+            "- array-bars: 숫자 배열의 정렬, swap, shift, 비교, 인덱스 이동이 핵심일 때\n"
+            "- array-cells: 배열/리스트/문자열의 값 조회, 수정, 탐색 상태 또는 단일 스칼라 변수 값 변화가 핵심일 때\n"
+            "- stack-vertical: LIFO push/pop 흐름이 핵심일 때\n"
+            "- queue-horizontal: FIFO enqueue/dequeue 흐름이 핵심일 때\n"
+            "- call-stack: 함수 호출, 재귀, 프레임 변화가 핵심일 때\n"
+            "- dp-table: 2차원 표나 점화식 상태가 단계적으로 채워질 때\n"
+            "- tree-binary: left/right 자식 기반 트리 구조가 핵심일 때\n"
+            "- graph-node-edge: 인접 리스트, visited, BFS/DFS 같은 그래프 순회가 핵심일 때\n"
+            "- flowchart: for, while, if/else처럼 제어 흐름 자체를 배우는 단순 코드일 때\n"
+            "- hybrid: 배열/스택/큐/그래프 같은 자료구조 상태 변화와 for/while/if 제어 흐름이 모두 중요할 때\n"
+            "- none: 단순 출력, 단일 계산, trace로 볼 구조가 부족할 때"
         )
 
     def _build_user_prompt(self, context: VisualizationSelectionContext) -> str:
@@ -187,28 +203,123 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
         if len(source_code) > 6000:
             source_code = f"{source_code[:6000]}\n... 이하 코드는 길이 제한으로 생략됨"
 
+        static_summary = self._build_static_summary(context)
+        trace_summary = self._build_trace_prompt_payload(context)
+        fence_language = context.language if context.language in {"python", "c", "java"} else "text"
+
+        return (
+            f"언어: {context.language}\n"
+            f"요청 모드 힌트: {context.requested_mode}\n"
+            f"지원 시각화 모드: {', '.join(sorted(self._supported_modes))}\n\n"
+            "실행 후 Trace IR을 가장 중요한 근거로 삼아 템플릿을 선택하고, 패널에 보여줄 분석을 작성해줘.\n"
+            "출력은 지정된 JSON schema만 따른다.\n\n"
+            "정적 분석 참고:\n"
+            f"{static_summary}\n\n"
+            "Trace IR 요약:\n"
+            f"{trace_summary}\n\n"
+            "사용자 코드:\n"
+            f"```{fence_language}\n"
+            f"{source_code}\n"
+            "```"
+        )
+
+    def _build_static_summary(self, context: VisualizationSelectionContext) -> str:
         analysis_snapshot = analyze_source_code(
             language=context.language,
             source_code=context.source_code,
             supported_modes=self._supported_modes,
         )
-        analysis_summary = "\n".join(
-            f"- {line}" for line in analysis_snapshot.summary_lines
-        )
-        fence_language = "python" if context.language == "python" else "c"
+        if not analysis_snapshot.summary_lines:
+            return "- 정적 분석에서 뚜렷한 알고리즘 구조를 찾지 못했습니다."
+        return "\n".join(f"- {line}" for line in analysis_snapshot.summary_lines)
 
-        return (
-            f"언어: {context.language}\n"
-            f"지원 시각화 모드: {', '.join(sorted(self._supported_modes))}\n"
-            "아래 코드를 학습 시각화하기에 가장 적절한 템플릿을 고르세요.\n"
-            "먼저 정적 분석 요약을 참고하고, 그다음 원본 코드를 확인하세요.\n"
-            "출력은 JSON schema만 따르세요.\n\n"
-            "정적 분석 요약:\n"
-            f"{analysis_summary}\n\n"
-            f"```{fence_language}\n"
-            f"{source_code}\n"
-            "```"
-        )
+    def _build_trace_prompt_payload(self, context: VisualizationSelectionContext) -> str:
+        result = context.trace_result
+        if result is None:
+            return json.dumps({"available": False}, ensure_ascii=False)
+
+        steps = list(getattr(result, "steps", []) or [])
+        sampled_steps = self._sample_trace_steps(steps)
+        payload = {
+            "available": True,
+            "status": getattr(result, "status", ""),
+            "stdout": self._short_text(getattr(result, "stdout", "")),
+            "stderr": self._short_text(getattr(result, "stderr", "")),
+            "error_message": self._short_text(getattr(result, "error_message", "") or ""),
+            "total_steps": len(steps),
+            "summary": self._trace_summary_dict(result),
+            "sampled_steps": [self._step_to_prompt_dict(index, step) for index, step in sampled_steps],
+        }
+        return json.dumps(payload, ensure_ascii=False, default=str)
+
+    def _trace_summary_dict(self, result: Any) -> dict[str, Any]:
+        summary = getattr(result, "summary", None)
+        if summary is None:
+            return {}
+        return {
+            "total_steps": getattr(summary, "total_steps", 0),
+            "function_names": getattr(summary, "function_names", []),
+            "has_stdout": getattr(summary, "has_stdout", False),
+            "has_errors": getattr(summary, "has_errors", False),
+        }
+
+    def _sample_trace_steps(self, steps: list[Any]) -> list[tuple[int, Any]]:
+        if len(steps) <= 24:
+            return list(enumerate(steps, start=1))
+
+        indexed = list(enumerate(steps, start=1))
+        selected = indexed[:12] + indexed[-8:]
+        midpoint = indexed[len(indexed) // 2]
+        if midpoint not in selected:
+            selected.insert(12, midpoint)
+        return selected
+
+    def _step_to_prompt_dict(self, index: int, step: Any) -> dict[str, Any]:
+        return {
+            "step_index": index,
+            "line_number": getattr(step, "line_number", 0),
+            "event_type": getattr(step, "event_type", ""),
+            "function_name": getattr(step, "function_name", ""),
+            "locals": self._compact_mapping(getattr(step, "locals_snapshot", {})),
+            "globals": self._compact_mapping(getattr(step, "globals_snapshot", {})),
+            "stdout": self._short_text(getattr(step, "stdout_snapshot", "")),
+            "call_stack": [
+                {
+                    "function_name": getattr(frame, "function_name", ""),
+                    "line_number": getattr(frame, "line_number", None),
+                }
+                for frame in (getattr(step, "call_stack", []) or [])
+            ][-8:],
+            "metadata": self._compact_mapping(getattr(step, "metadata", {})),
+        }
+
+    def _compact_mapping(self, value: Any) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            return {}
+        compacted: dict[str, Any] = {}
+        for key, item in list(value.items())[:12]:
+            compacted[str(key)] = self._compact_value(item)
+        return compacted
+
+    def _compact_value(self, value: Any) -> Any:
+        if isinstance(value, dict):
+            return {str(key): self._compact_value(item) for key, item in list(value.items())[:8]}
+        if isinstance(value, list):
+            preview = [self._compact_value(item) for item in value[:12]]
+            if len(value) > 12:
+                preview.append(f"... {len(value) - 12} more")
+            return preview
+        if isinstance(value, tuple):
+            return self._compact_value(list(value))
+        if isinstance(value, str):
+            return self._short_text(value, limit=160)
+        return value
+
+    def _short_text(self, value: Any, *, limit: int = 500) -> str:
+        text = value if isinstance(value, str) else str(value)
+        if len(text) <= limit:
+            return text
+        return f"{text[:limit]}... 생략"
 
     def _build_response_schema(self) -> dict[str, Any]:
         mode_enum = sorted(self._supported_modes)
@@ -230,6 +341,29 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
                     "minimum": 0,
                     "maximum": 1,
                 },
+                "summary": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500,
+                },
+                "observations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 180,
+                    },
+                    "maxItems": 5,
+                },
+                "learning_points": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 180,
+                    },
+                    "maxItems": 5,
+                },
                 "alternatives": {
                     "type": "array",
                     "items": {
@@ -239,7 +373,15 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
                     "maxItems": 3,
                 },
             },
-            "required": ["selected_mode", "reason", "confidence", "alternatives"],
+            "required": [
+                "selected_mode",
+                "reason",
+                "confidence",
+                "summary",
+                "observations",
+                "learning_points",
+                "alternatives",
+            ],
         }
 
     def _extract_output_text(self, payload: dict[str, Any]) -> str:
@@ -259,12 +401,22 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
 
         raise ValueError("OpenAI 응답에서 구조화된 텍스트를 찾지 못했습니다.")
 
-    def _build_auto_fallback_result(self, reason: str) -> VisualizationSelectionResult:
+    def _fallback_with_reason(
+        self,
+        context: VisualizationSelectionContext,
+        reason: str,
+    ) -> VisualizationSelectionResult:
+        fallback = self._fallback_selector.select(context)
+        if context.requested_mode == "auto" and fallback.selected_mode not in self._supported_modes:
+            fallback = VisualizationSelectionResult(selected_mode=self._default_mode)
         return VisualizationSelectionResult(
-            selected_mode=self._default_mode,
+            selected_mode=fallback.selected_mode,
             reason=reason,
-            confidence=0.0,
-            alternatives=sorted(mode for mode in self._supported_modes if mode != self._default_mode),
+            confidence=fallback.confidence,
+            alternatives=fallback.alternatives,
+            summary=fallback.summary,
+            observations=fallback.observations,
+            learning_points=fallback.learning_points,
         )
 
     def _normalize_confidence(self, value: Any) -> float | None:
@@ -275,3 +427,8 @@ class OpenAIVisualizationSelector(VisualizationSelectorProtocol):
         except (TypeError, ValueError):
             return None
         return max(0.0, min(1.0, normalized))
+
+    def _string_list(self, value: Any, *, limit: int) -> list[str]:
+        if not isinstance(value, list):
+            return []
+        return [str(item) for item in value[:limit] if str(item).strip()]

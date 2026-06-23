@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1180" viewBox="0 0 1680 1180">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 34px "Segoe UI", "Malgun Gothic", sans-serif; fill: #111827; }
+      .subtitle { font: 500 16px "Segoe UI", "Malgun Gothic", sans-serif; fill: #64748b; }
+      .section { font: 700 18px "Segoe UI", "Malgun Gothic", sans-serif; fill: #334155; }
+      .table { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.4; rx: 12; }
+      .current { stroke: #2563eb; stroke-width: 2.2; }
+      .planned { stroke: #94a3b8; stroke-dasharray: 6 5; }
+      .head { fill: #eff6ff; }
+      .head-planned { fill: #f1f5f9; }
+      .table-name { font: 700 15px "Segoe UI", "Malgun Gothic", sans-serif; fill: #0f172a; }
+      .field { font: 12px "Consolas", "D2Coding", monospace; fill: #334155; }
+      .note { font: 12px "Segoe UI", "Malgun Gothic", sans-serif; fill: #64748b; }
+      .rel { stroke: #64748b; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+      .rel-main { stroke: #2563eb; stroke-width: 2; fill: none; marker-end: url(#arrow-main); }
+      .pill { fill: #dbeafe; stroke: #bfdbfe; }
+      .pill-planned { fill: #f8fafc; stroke: #cbd5e1; }
+      .legend-text { font: 13px "Segoe UI", "Malgun Gothic", sans-serif; fill: #475569; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#64748b" />
+    </marker>
+    <marker id="arrow-main" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2563eb" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1680" height="1180" />
+  <text class="title" x="60" y="62">hohyun DB 설계</text>
+  <text class="subtitle" x="60" y="92">CodeViz 현재 구현 스키마 + 학습/시험/시각화 운영 확장안</text>
+
+  <rect class="pill" x="60" y="118" width="120" height="30" rx="15" />
+  <text class="legend-text" x="80" y="138">현재 구현</text>
+  <rect class="pill-planned" x="195" y="118" width="120" height="30" rx="15" />
+  <text class="legend-text" x="216" y="138">권장 확장</text>
+
+  <text class="section" x="60" y="190">인증 / 사용자</text>
+  <text class="section" x="430" y="190">학습 카탈로그</text>
+  <text class="section" x="900" y="190">실행 / Trace</text>
+  <text class="section" x="1250" y="190">시험 / 피드백</text>
+
+  <!-- users -->
+  <rect class="table current" x="60" y="220" width="270" height="166" />
+  <rect class="head" x="61" y="221" width="268" height="36" rx="11" />
+  <text class="table-name" x="78" y="244">users</text>
+  <text class="field" x="78" y="278">id PK</text>
+  <text class="field" x="78" y="300">email UK</text>
+  <text class="field" x="78" y="322">password_hash</text>
+  <text class="field" x="78" y="344">name</text>
+  <text class="field" x="78" y="366">created_at</text>
+
+  <!-- auth_sessions -->
+  <rect class="table current" x="60" y="430" width="270" height="146" />
+  <rect class="head" x="61" y="431" width="268" height="36" rx="11" />
+  <text class="table-name" x="78" y="454">auth_sessions</text>
+  <text class="field" x="78" y="488">id PK</text>
+  <text class="field" x="78" y="510">token_hash UK</text>
+  <text class="field" x="78" y="532">user_id FK</text>
+  <text class="field" x="78" y="554">expires_at</text>
+
+  <!-- lesson_progress -->
+  <rect class="table planned" x="60" y="620" width="270" height="168" />
+  <rect class="head-planned" x="61" y="621" width="268" height="36" rx="11" />
+  <text class="table-name" x="78" y="644">lesson_progress</text>
+  <text class="field" x="78" y="678">id PK</text>
+  <text class="field" x="78" y="700">user_id FK</text>
+  <text class="field" x="78" y="722">lesson_id FK</text>
+  <text class="field" x="78" y="744">status, best_score</text>
+  <text class="field" x="78" y="766">completed_at</text>
+
+  <!-- learning_categories -->
+  <rect class="table planned" x="430" y="220" width="310" height="132" />
+  <rect class="head-planned" x="431" y="221" width="308" height="36" rx="11" />
+  <text class="table-name" x="448" y="244">learning_categories</text>
+  <text class="field" x="448" y="278">id PK</text>
+  <text class="field" x="448" y="300">name, description</text>
+  <text class="field" x="448" y="322">sort_order, is_active</text>
+
+  <!-- learning_lessons -->
+  <rect class="table planned" x="430" y="395" width="310" height="212" />
+  <rect class="head-planned" x="431" y="396" width="308" height="36" rx="11" />
+  <text class="table-name" x="448" y="419">learning_lessons</text>
+  <text class="field" x="448" y="453">id PK</text>
+  <text class="field" x="448" y="475">category_id FK</text>
+  <text class="field" x="448" y="497">visualization_template_id FK</text>
+  <text class="field" x="448" y="519">title, description</text>
+  <text class="field" x="448" y="541">language, difficulty</text>
+  <text class="field" x="448" y="563">estimated_minutes, tags</text>
+  <text class="field" x="448" y="585">sort_order, is_active</text>
+
+  <!-- lesson_contents -->
+  <rect class="table planned" x="430" y="650" width="310" height="146" />
+  <rect class="head-planned" x="431" y="651" width="308" height="36" rx="11" />
+  <text class="table-name" x="448" y="674">lesson_contents</text>
+  <text class="field" x="448" y="708">lesson_id PK, FK</text>
+  <text class="field" x="448" y="730">summary</text>
+  <text class="field" x="448" y="752">concept_points JSON</text>
+  <text class="field" x="448" y="774">walkthrough_code</text>
+
+  <!-- lesson_exercises -->
+  <rect class="table planned" x="430" y="840" width="310" height="168" />
+  <rect class="head-planned" x="431" y="841" width="308" height="36" rx="11" />
+  <text class="table-name" x="448" y="864">lesson_exercises</text>
+  <text class="field" x="448" y="898">id PK</text>
+  <text class="field" x="448" y="920">lesson_id FK</text>
+  <text class="field" x="448" y="942">prompt, starter_code</text>
+  <text class="field" x="448" y="964">function_name</text>
+  <text class="field" x="448" y="986">checkpoints JSON</text>
+
+  <!-- exercise_test_cases -->
+  <rect class="table planned" x="430" y="1040" width="310" height="112" />
+  <rect class="head-planned" x="431" y="1041" width="308" height="36" rx="11" />
+  <text class="table-name" x="448" y="1064">exercise_test_cases</text>
+  <text class="field" x="448" y="1098">exercise_id FK, case_order</text>
+  <text class="field" x="448" y="1120">input JSON, expected JSON</text>
+
+  <!-- visualization_templates -->
+  <rect class="table planned" x="900" y="220" width="300" height="168" />
+  <rect class="head-planned" x="901" y="221" width="298" height="36" rx="11" />
+  <text class="table-name" x="918" y="244">visualization_templates</text>
+  <text class="field" x="918" y="278">id PK</text>
+  <text class="field" x="918" y="300">base_mode, display_name</text>
+  <text class="field" x="918" y="322">supported_languages JSON</text>
+  <text class="field" x="918" y="344">required_trace_features JSON</text>
+  <text class="field" x="918" y="366">is_active</text>
+
+  <!-- execution_runs -->
+  <rect class="table current" x="900" y="430" width="300" height="234" />
+  <rect class="head" x="901" y="431" width="298" height="36" rx="11" />
+  <text class="table-name" x="918" y="454">execution_runs</text>
+  <text class="field" x="918" y="488">id PK</text>
+  <text class="field" x="918" y="510">user_id FK nullable</text>
+  <text class="field" x="918" y="532">lesson_id FK planned</text>
+  <text class="field" x="918" y="554">language</text>
+  <text class="field" x="918" y="576">visualization_mode</text>
+  <text class="field" x="918" y="598">source_code, stdin</text>
+  <text class="field" x="918" y="620">stdout, stderr</text>
+  <text class="field" x="918" y="642">status, step_count</text>
+
+  <!-- execution_steps -->
+  <rect class="table current" x="900" y="710" width="300" height="234" />
+  <rect class="head" x="901" y="711" width="298" height="36" rx="11" />
+  <text class="table-name" x="918" y="734">execution_steps</text>
+  <text class="field" x="918" y="768">id PK</text>
+  <text class="field" x="918" y="790">run_id FK</text>
+  <text class="field" x="918" y="812">step_index, line_number</text>
+  <text class="field" x="918" y="834">event_type, function_name</text>
+  <text class="field" x="918" y="856">locals_snapshot JSON</text>
+  <text class="field" x="918" y="878">globals_snapshot JSON</text>
+  <text class="field" x="918" y="900">call_stack JSON</text>
+  <text class="field" x="918" y="922">metadata JSON</text>
+
+  <!-- exam_sessions -->
+  <rect class="table planned" x="1250" y="220" width="320" height="168" />
+  <rect class="head-planned" x="1251" y="221" width="318" height="36" rx="11" />
+  <text class="table-name" x="1268" y="244">exam_sessions</text>
+  <text class="field" x="1268" y="278">id PK</text>
+  <text class="field" x="1268" y="300">user_id FK</text>
+  <text class="field" x="1268" y="322">category_id FK</text>
+  <text class="field" x="1268" y="344">question_count, status</text>
+  <text class="field" x="1268" y="366">started_at, completed_at</text>
+
+  <!-- exam_session_questions -->
+  <rect class="table planned" x="1250" y="430" width="320" height="132" />
+  <rect class="head-planned" x="1251" y="431" width="318" height="36" rx="11" />
+  <text class="table-name" x="1268" y="454">exam_session_questions</text>
+  <text class="field" x="1268" y="488">id PK</text>
+  <text class="field" x="1268" y="510">session_id FK</text>
+  <text class="field" x="1268" y="532">lesson_id FK, question_order</text>
+
+  <!-- exam_attempts -->
+  <rect class="table current" x="1250" y="605" width="320" height="212" />
+  <rect class="head" x="1251" y="606" width="318" height="36" rx="11" />
+  <text class="table-name" x="1268" y="629">exam_attempts</text>
+  <text class="field" x="1268" y="663">id PK</text>
+  <text class="field" x="1268" y="685">user_id FK nullable</text>
+  <text class="field" x="1268" y="707">session_question_id FK planned</text>
+  <text class="field" x="1268" y="729">lesson_id, question_id</text>
+  <text class="field" x="1268" y="751">source_code</text>
+  <text class="field" x="1268" y="773">status, score</text>
+  <text class="field" x="1268" y="795">result_payload JSON</text>
+
+  <!-- exam_case_results -->
+  <rect class="table planned" x="1250" y="860" width="320" height="146" />
+  <rect class="head-planned" x="1251" y="861" width="318" height="36" rx="11" />
+  <text class="table-name" x="1268" y="884">exam_case_results</text>
+  <text class="field" x="1268" y="918">id PK</text>
+  <text class="field" x="1268" y="940">attempt_id FK</text>
+  <text class="field" x="1268" y="962">case_id, passed</text>
+  <text class="field" x="1268" y="984">expected JSON, actual JSON</text>
+
+  <!-- relationships -->
+  <path class="rel-main" d="M195 386 L195 430" />
+  <path class="rel" d="M205 386 L205 620" />
+  <path class="rel-main" d="M330 303 C505 303 724 490 900 510" />
+  <path class="rel-main" d="M330 303 C690 303 1000 680 1250 685" />
+  <path class="rel" d="M740 285 L900 285" />
+  <path class="rel" d="M585 352 L585 395" />
+  <path class="rel" d="M585 607 L585 650" />
+  <path class="rel" d="M585 607 L585 840" />
+  <path class="rel" d="M585 1008 L585 1040" />
+  <path class="rel" d="M740 500 C790 500 842 505 900 525" />
+  <path class="rel" d="M1050 388 L1050 430" />
+  <path class="rel-main" d="M1050 664 L1050 710" />
+  <path class="rel" d="M740 500 C980 500 1080 490 1250 500" />
+  <path class="rel" d="M1410 388 L1410 430" />
+  <path class="rel" d="M1410 562 L1410 605" />
+  <path class="rel" d="M1410 817 L1410 860" />
+  <path class="rel" d="M330 704 L430 704" />
+  <path class="rel" d="M330 704 C760 704 900 575 900 555" />
+
+  <text class="note" x="60" y="1120">메모: 파란 실선은 현재 DB에 이미 있는 핵심 관계, 회색 점선 테이블은 JSON/서비스 데이터를 DB로 옮길 때의 권장 확장 영역입니다.</text>
+</svg>

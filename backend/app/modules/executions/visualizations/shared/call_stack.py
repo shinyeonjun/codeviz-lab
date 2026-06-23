@@ -12,7 +12,13 @@ def build_call_stack_visualization(execution: ExecutionRead) -> ExecutionVisuali
     stack: list[str] = []
     step_states: list[ExecutionVisualizationStepRead] = []
     observed_functions = {step.function_name for step in execution.steps}
-    if len(observed_functions) <= 1:
+    has_runtime_stack = any(len(step.call_stack) > 1 for step in execution.steps)
+    has_recursive_stack = any(
+        len({frame.function_name for frame in step.call_stack}) < len(step.call_stack)
+        for step in execution.steps
+        if step.call_stack
+    )
+    if len(observed_functions) <= 1 and not (has_runtime_stack or has_recursive_stack):
         return None
 
     for step in execution.steps:
@@ -37,7 +43,7 @@ def build_call_stack_visualization(execution: ExecutionRead) -> ExecutionVisuali
                         "frameCount": len(frames),
                         "activeDepth": len(frames) - 1 if frames else None,
                     },
-                    message=f"{step.call_stack[-1].function_name} ?꾨젅?꾩쓣 異붿쟻?⑸땲??",
+                    message=f"{step.call_stack[-1].function_name} 프레임을 추적합니다.",
                 )
             )
             continue

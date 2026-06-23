@@ -13,9 +13,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://codeviz:codeviz@127.0.0.1:55433/codeviz"
     runner_backend: str = "docker"
     runner_timeout_seconds: int = 5
-    runner_c_timeout_seconds: int = 20
+    runner_c_timeout_seconds: int = 45
     runner_docker_image: str = "codeviz-python-sandbox:latest"
     runner_docker_c_image: str = "codeviz-c-sandbox:latest"
+    runner_docker_java_image: str = "codeviz-java-sandbox:latest"
     runner_docker_memory_limit: str = "256m"
     runner_docker_cpus: str = "0.5"
     runner_docker_pids_limit: int = 64
@@ -24,7 +25,7 @@ class Settings(BaseSettings):
     runner_max_stdout_chars: int = 10000
     runner_max_source_code_chars: int = 20000
     runner_max_stdin_chars: int = 4000
-    visualization_selector_backend: str = "manual"
+    visualization_selector_backend: str = "openai"
     openai_api_key: str | None = None
     openai_model: str = "gpt-5-mini"
     openai_api_url: str = "https://api.openai.com/v1/responses"
@@ -50,6 +51,16 @@ class Settings(BaseSettings):
         if not value.startswith(("postgresql+psycopg://", "postgresql://")):
             raise ValueError("DATABASE_URL은 PostgreSQL 연결 문자열이어야 합니다.")
         return value
+
+    @field_validator("openai_api_key", "openai_project_id", "openai_organization_id", mode="before")
+    @classmethod
+    def normalize_optional_secret(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            stripped = value.strip()
+            return stripped or None
+        return str(value)
 
     @property
     def cors_origin_list(self) -> list[str]:
